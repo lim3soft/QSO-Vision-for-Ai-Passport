@@ -1,0 +1,51 @@
+name: Publish verified firmware
+on:
+  push:
+    tags: ['v1.0', 'v2.0', 'v2.3']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify archived firmware and prepare release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF_NAME" in v1.0|v2.0|v2.3) ;; *) exit 1 ;; esac
+          version="${GITHUB_REF_NAME#v}"
+          python3 tools/verify_release.py "$version"
+          python3 - "$version" <<'PYNOTES'
+          from pathlib import Path
+          import sys
+          p=Path('firmware')/sys.argv[1]
+          text=(p/'RELEASE-NOTES.md').read_text()+'\n\n---\n\n'+(p/'RELEASE-NOTES.zh_CN.md').read_text()
+          Path('release-notes.txt').write_text(text)
+          PYNOTES
+      - name: Create the release and upload firmware
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          latest=false
+          if [[ "$version" == 2.3 ]]; then latest=true; fi
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --verify-tag \
+              --title "QSO VISION $version" --notes-file release-notes.txt --latest="$latest"
+          fi
+          files=("firmware/$version/QSO-Vision.bin" "firmware/$version/SHA256SUMS.txt" "firmware/$version/manifest.json" release-notes.txt)
+          if [[ -f "firmware/$version/User-Guide-CN-EN.txt" ]]; then
+            files+=("firmware/$version/User-Guide-CN-EN.txt")
+          fi
+          gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
