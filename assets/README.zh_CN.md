@@ -10,6 +10,9 @@
 
 可复用的字库文件与生成的字库源码放在 `fonts/`。
 
+QSO Vision 的标题、呼号、易读菜单及日期/时间使用[小型 DejaVu 粗体与常规字库](fonts/README.zh_CN.md)。
+来源、许可、字符范围与转换命令均记录在资源目录中。
+
 - 命名要能反映字族、字重、字级与格式。
 - 记录来源、许可、字符范围、转换命令与目标放置路径。
 - 添加字库前评估 Flash 与内部 RAM 影响；ESP32-C3 无 PSRAM。
@@ -56,8 +59,14 @@ BSP 在 `components/bsp/src/bsp_battery.c` 中嵌入这 80 字节，主机检查
 这是电量计参数，不是充电配置，也不能通用于所有 500 mAh 电芯；详见
 [硬件指南](../docs/hardware-design/AI_HARDWARE_DEVELOPMENT_GUIDE.zh_CN.md#9-cw2017-电池计)。
 
-## QSO VISION 界面图
+## QSO 监听界面参考图
 
-`images/qso-vision/` 包含当前通话、空闲、选项、亮度、超时和 About 原生 LVGL
-测试渲染图，已完整生成并检查，使用示例资料，不是设备照片或实时截屏。
-用于 README/指南，不嵌入固件。
+`images/qso-monitor-reference/soundEQBAR.png` 是用户标注的设备照片，
+`images/qso-monitor-reference/soundbar.png` 是用户提供的 EQ 风格参考图。
+两图原样保留，仅用于布局参考，不嵌入固件。后者有图库水印，未提供再分发许可；
+应用采用 LVGL 自行绘制分段条形，不复制参考图像素。
+
+## 离线旗帜
+
+[国家旗帜](images/country-flags/README.zh_CN.md)：QSO Vision 使用的 256 张 MIT 许可
+16x12 RGB565 小图，包含 SVG 原图、索引与转换说明。

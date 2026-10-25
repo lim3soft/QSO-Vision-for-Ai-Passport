@@ -1,0 +1,16 @@
+{
+  "version": "2.3.3",
+  "artifact": "QSO-Vision.bin",
+  "format": "complete merged ESP firmware",
+  "target": "esp32c3",
+  "flash_size_bytes": 8388608,
+  "flash_offset": "0x0",
+  "sha256": "8f9a2198fd5d764945cd96931fb7b1e81d4c7ee986e1b6e99f44079e9005a483",
+  "size": 1894144,
+  "matching_elf_sha256": "d3dbb983cb3a3e606eb0fafac0ad586474d869a7d978779afbc18ec64f9b8eb3",
+  "source_status": "Complete application/BSP source in tag v2.3.3",
+  "version_evidence": "ESP application descriptor 2.3.3; About Build: 2.3.3",
+  "validation": "Build, merged layout/archive, application host and native UI tests passed; owner confirmed preceding feature build; final release rebuild not independently flashed",
+  "upstream_base": "FoloToy/ai-passport commit 006c227",
+  "flag_license": "flag-icons 7.6.0, MIT; full notice embedded and supplied"
+}

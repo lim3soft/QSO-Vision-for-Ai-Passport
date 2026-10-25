@@ -2,6 +2,20 @@
 
 # 验证及来源
 
+## 2.3.3 发布验证
+
+- Build：PASS，ESP-IDF 5.5.3 隔离构建、合并布局及匹配调试归档。
+- Host tests：PASS，应用 ASan/UBSan 主机测试、256 旗帜、质量字段、切组、音频与 Wi-Fi 回归；原生 UI 预览通过。
+- Device tests：最终版本重编译包 NOT RUN；作者确认此前功能测试版正常。声学、路由器及长期验收仍未完成。
+- 完整模板检查仍失败于演示专用 `on_key` 检查，未宣称通过。
+
+完整镜像 SHA-256：`8f9a2198fd5d764945cd96931fb7b1e81d4c7ee986e1b6e99f44079e9005a483`，1,894,144 字节，从 0x0 刷入。
+匹配 ELF SHA-256：`d3dbb983cb3a3e606eb0fafac0ad586474d869a7d978779afbc18ec64f9b8eb3`。
+应用/构建快照见 `firmware/2.3.3/source-sha256.json`。图像为明确标注示例资料的界面渲染。
+性能观测与限制见[旗帜及性能记录](country-flags-and-performance.zh_CN.md)。
+
+## 历史 2.3 验证记录
+
 2.3 发布镜像是作者实测的原镜像，SHA-256：
 `d0f9f46e335af35d4f336ab8afc3b0d29f8a95ca2562de760f430b2324475824`。
 对应 ELF SHA-256：

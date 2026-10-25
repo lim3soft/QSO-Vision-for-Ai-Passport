@@ -6,6 +6,7 @@
 typedef struct {
     int64_t started_us, ended_us;
     uint32_t source_id;
+    bm_qso_quality_t quality;
     char session[64], callsign[24], country[24];
 } bm_qso_history_row_t;
 

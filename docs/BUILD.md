@@ -4,7 +4,7 @@
 
 Use **ESP-IDF 5.5.3**, targeting ESP32-C3 / 8 MB flash, with no PSRAM. The SDK and
 managed components are development tools/dependencies; they are not copied into
-the device as an 800 MB image. The 2.3 complete firmware is 1,767,264 bytes.
+the device as an 800 MB image. The 2.3.3 complete firmware is 1,894,144 bytes.
 See the retained [environment bootstrap](development/engineering/environment-setup.md)
 for supported setup, including Windows and Linux prerequisites.
 
@@ -46,7 +46,7 @@ see the [validation record](VALIDATION.md). Do not describe that gate as passing
 
 ## Install the downloaded release
 
-1. Download `QSO-Vision.bin` and `SHA256SUMS.txt` from the same release. Use 2.3
+1. Download `QSO-Vision.bin` and `SHA256SUMS.txt` from the same release. Use 2.3.3
    unless you deliberately want an archived 1.0/2.0 version.
 2. Verify the digest, connect the Passport using a USB data cable, and close any
    serial monitor using the port. The full merged image must be written at **0x0**

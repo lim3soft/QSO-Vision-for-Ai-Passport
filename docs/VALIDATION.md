@@ -2,6 +2,20 @@
 
 # Validation and provenance
 
+## 2.3.3 release validation
+
+- Build: PASS, ESP-IDF 5.5.3 isolated build, merged layout and matching debug archive.
+- Host tests: PASS, application ASan/UBSan tests, 256 flags, quality fields, switching, audio and Wi-Fi regressions; native UI preview passed.
+- Device tests: NOT RUN for the final version-labelled rebuild; the owner confirmed the preceding feature build. Acoustic, router and endurance acceptance remains unverified.
+- The complete template gate still fails the inherited demo-only `on_key` contract; it is not claimed to pass.
+
+Full image SHA-256: `8f9a2198fd5d764945cd96931fb7b1e81d4c7ee986e1b6e99f44079e9005a483`, 1,894,144 bytes, flash at 0x0.
+Matching ELF SHA-256: `d3dbb983cb3a3e606eb0fafac0ad586474d869a7d978779afbc18ec64f9b8eb3`.
+Application/build snapshot: `firmware/2.3.3/source-sha256.json`. Images are labelled UI renders with sample data.
+See [flags and performance evidence](country-flags-and-performance.md) for measurements and limits.
+
+## Historical 2.3 validation record
+
 The released 2.3 image is the exact image tested by the creator, SHA-256
 `d0f9f46e335af35d4f336ab8afc3b0d29f8a95ca2562de760f430b2324475824`.
 Matching ELF SHA-256:

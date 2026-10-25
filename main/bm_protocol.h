@@ -8,10 +8,13 @@
 #define BM_QSO_HISTORY_MAX 15
 #define BM_QSO_VISIBLE_ROWS 5
 
+#include "bm_quality.h"
+
 typedef struct {
     bool active;
     bool historical;
     uint32_t source_id;
+    bm_qso_quality_t quality;
     char session[64];
     char callsign[24];
     char name[40];

@@ -26,15 +26,17 @@ run_test() {
   "$qso_test_dir/$name"
 }
 run_test talkgroup main/test_talkgroup_parser.c main/talkgroup_model.c main/talkgroup_parser.c
+run_test flags tests/test_qso_flags.c main/qso_flags.c assets/images/country-flags/qso_flag_data.c
 run_test activity tests/test_qso_activity.c main/qso_ui_math.c
 run_test dimmer tests/test_qso_dimmer.c main/qso_dimmer.c main/qso_controls.c
 run_test screen tests/test_qso_screen.c main/qso_screen.c
 run_test dsp tests/test_bm_dsp.c main/bm_dsp.c
 run_test dsp-quality tests/test_bm_dsp_quality.c main/bm_dsp.c -lm
-run_test identity tests/test_bm_identity.c main/bm_identity.c main/bm_protocol.c "${qso_json_flags[@]}"
-run_test protocol tests/test_bm_protocol.c main/bm_protocol.c main/bm_qso_store.c main/qso_ui_math.c "${qso_json_flags[@]}"
-run_test switch -Itests/hoseline_stubs tests/test_bm_switch.c main/bm_protocol.c main/bm_qso_store.c main/bm_identity.c main/bm_dsp.c "${qso_json_flags[@]}"
-run_test directory -Itests/identity_http_stubs -Itests/hoseline_stubs tests/test_bm_identity_http.c main/bm_identity_lookup.c main/bm_identity.c main/bm_protocol.c "${qso_json_flags[@]}"
+run_test identity tests/test_bm_identity.c main/bm_identity.c main/bm_protocol.c main/bm_quality.c "${qso_json_flags[@]}"
+run_test quality tests/test_bm_quality.c main/bm_protocol.c main/bm_quality.c main/bm_qso_store.c "${qso_json_flags[@]}"
+run_test protocol tests/test_bm_protocol.c main/bm_protocol.c main/bm_quality.c main/bm_qso_store.c main/qso_ui_math.c "${qso_json_flags[@]}"
+run_test switch -Itests/hoseline_stubs tests/test_bm_switch.c main/bm_protocol.c main/bm_quality.c main/bm_qso_store.c main/bm_identity.c main/bm_dsp.c "${qso_json_flags[@]}"
+run_test directory -Itests/identity_http_stubs -Itests/hoseline_stubs tests/test_bm_identity_http.c main/bm_identity_lookup.c main/bm_identity.c main/bm_protocol.c main/bm_quality.c "${qso_json_flags[@]}"
 run_test wifi-info -Itests/wifi_info_stubs tests/test_wifi_info.c main/wifi_info.c
 run_test wifi-recovery -Itests/wifi_monitor_stubs tests/test_wifi_recovery.c main/wifi_retry.c
 printf 'QSO application host tests: PASS\n'

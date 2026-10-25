@@ -2,6 +2,15 @@
 
 # QSO VISION changelog
 
+## 2.3.3 — 2026-10-26
+
+- Added 256 offline flag pictures before current and history callsigns, with uppercase country labels.
+- Added reported BER/loss to history. Missing or pending values show --; final-result updates preserve genuine zero measurements.
+- Shortened history dates to dd/mm/yy and durations to m:ss, keeping date, time, duration and quality values on one line.
+- Restored a fixed bottom-left volume/mute status beside right-to-left button instructions, with no overlap.
+- Reduced repeated redraws and unrelated talkgroup data processing, improving instruction/EQ responsiveness and reducing background work while listening.
+- Added interface gallery previews.
+
 ## 2.3 — 2026-10-25
 
 - Improved speech continuity, loudness and distortion control to address gaps, crackle and quiet playback.

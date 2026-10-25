@@ -1,6 +1,6 @@
 [简体中文](USER_GUIDE.zh_CN.md) · English
 
-# QSO VISION 2.3 — user guide
+# QSO VISION 2.3.3 — user guide
 
 Developer: limesoft (9W3SPY). Device UI: English.
 
@@ -51,7 +51,8 @@ For Other / Custom, UP / DOWN chooses a digit, short OK appends it, double UP de
 
 - MONITORING TALK GROUP shows the selected group.
 - When available, the current callsign is orange, with name, country and duration below. Segmented EQ bars in the lower-right animate during QSO activity and settle to zero afterward (an activity animation). The lower-left clock uses hh:mm:ss DAY dd/mm/yy, existing network time synchronization and Malaysia time; placeholders appear until valid time is available.
-- RECENT QSOs loads and retains up to 15 completed calls from BM, with five visible. Short UP / DOWN scrolls one entry; the heading shows range/total. Each row has orange callsign, cyan country, date, time and duration. Completed calls enter history automatically. Changing TG reloads history; the available count depends on BM.
+- RECENT QSOs loads and retains up to 15 completed calls from BM, with five visible. Short UP / DOWN scrolls one entry; the heading shows range/total. Each row has a flag before the orange callsign and an uppercase cyan country. The next line contains date dd/mm/yy, time, duration m:ss, BER and LOSS. Missing/pending quality values show --; genuine reported zero values show 0.00%. Completed calls enter history automatically. Changing TG reloads history; the available count depends on BM.
+- The bottom-left VOL-xx% / MUTED status stays fixed beside right-to-left scrolling button instructions.
 - The Wi-Fi icon reflects wireless connection status. Being connected to Wi-Fi does not guarantee internet access.
 - A green speaker connection icon means Hoseline is connected; red means disconnected. The icon changes when muted. Green does not guarantee someone is currently transmitting.
 - Battery is green above 20%, yellow at 11–20%, and red at 10% or less. Live charging detection/animation is not provided in this release.

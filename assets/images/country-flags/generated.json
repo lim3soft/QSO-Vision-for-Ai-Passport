@@ -1,0 +1,9 @@
+{
+  "width": 16,
+  "height": 12,
+  "color_format": "RGB565",
+  "flags": 256,
+  "pixel_bytes": 98304,
+  "aliases": 571,
+  "data_sha256": "5e2cc9ab9a7d11fd2c005867111ad77d93152ac87f1cc4d0b7642fe272200660"
+}

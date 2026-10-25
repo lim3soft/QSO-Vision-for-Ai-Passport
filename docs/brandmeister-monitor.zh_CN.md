@@ -26,3 +26,5 @@ UI 定时器绘制模拟活动 EQ 和本地时钟，不改变音频采样。Wi-F
 
 见[使用指南](USER_GUIDE.zh_CN.md)、[构建说明](BUILD.zh_CN.md)及
 [验证记录](VALIDATION.zh_CN.md)。不声称已测量节电电流或完成全部网络/长期验证。
+
+旗帜/界面性能见[专项说明](country-flags-and-performance.zh_CN.md)，质量字段见[BER/LOSS 说明](brandmeister-quality.zh_CN.md)。

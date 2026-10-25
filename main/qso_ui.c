@@ -13,6 +13,11 @@
 #define ORANGE 0xFF8A18
 #define GREEN 0x56EBAC
 
+/* Two identical cycles make a continuous right-to-left marquee. The child
+ * label is clipped by its own viewport, outside the fixed volume area. */
+#define MONITOR_BUTTON_HINT "UP/DOWN history   |   HOLD UP/DOWN volume   |   2xDOWN mute/unmute   |   OK menu   |   HOLD OK screen off/wake   |   "
+static const char monitor_button_hints[]=MONITOR_BUTTON_HINT MONITOR_BUTTON_HINT;
+
 static lv_obj_t *plain(lv_obj_t *parent, int x, int y, int w, int h)
 {
     lv_obj_t *obj = lv_obj_create(parent);
@@ -156,13 +161,21 @@ static void body_draw(lv_event_t *event)
     qso_ui_t *ui=lv_event_get_user_data(event);
     if(ui->page!=QSO_PAGE_MONITOR) return;
     lv_area_t a;lv_obj_get_coords(ui->body,&a);
-    lv_area_t monitor={a.x1+8,a.y1+3,a.x1+231,a.y1+112};
-    lv_area_t history={a.x1+8,a.y1+118,a.x1+231,a.y1+255};
+    lv_area_t monitor={a.x1+8,a.y1+3,a.x1+231,a.y1+101};
+    lv_area_t history={a.x1+8,a.y1+104,a.x1+231,a.y1+268};
     /* Website channel-one: #103949 -> #0d2438, #297d91 border.
      * A simple opaque gradient needs no whole-card/framebuffer layer. */
     card(lv_event_get_layer(event),&monitor,ui->live?CYAN:0x297D91);
     card(lv_event_get_layer(event),&history,0x297D91);
+    lv_layer_t *layer=lv_event_get_layer(event);
+    const char *columns[]={"DATE","TIME","DUR","BER","LOSS"};
+    const int xs[]={5,51,97,128,165};
+    for(unsigned i=0;i<5;++i)
+        draw_text(layer,a.x1+16+xs[i],a.y1+122,i==2?28:38,
+            &lv_font_montserrat_8,i==3?CYAN:i==4?LIME:MUTED,columns[i]);
 }
+
+static void draw_flag(lv_layer_t *layer, const lv_image_dsc_t *image, int x, int y);
 
 static void data_draw(lv_event_t *event)
 {
@@ -177,28 +190,42 @@ static void data_draw(lv_event_t *event)
         }
         for(size_t i=0;i<ui->history_count;++i) {
             const bm_qso_info_t *row=&ui->history[i];
-            int y=a.y1+(int)i*24;
+            int y=a.y1+(int)i*27;
             lv_draw_rect_dsc_t bubble;lv_draw_rect_dsc_init(&bubble);
             bubble.radius=5;bubble.bg_color=lv_color_hex(0x0B1D30);
             bubble.border_width=1;bubble.border_color=lv_color_hex(0x25485E);
-            lv_area_t bounds={a.x1,y,a.x2,y+22};lv_draw_rect(layer,&bubble,&bounds);
+            lv_area_t bounds={a.x1,y,a.x2,y+25};lv_draw_rect(layer,&bubble,&bounds);
             /* Orange caller and cyan country remain distinct on the dark bubble. */
             lv_point_t measured;
             lv_text_get_size(&measured,row->callsign,&qso_bold_12,0,0,LV_COORD_MAX,LV_TEXT_FLAG_NONE);
+            const lv_image_dsc_t *flag=qso_flag_image(row->country);
+            int inset=flag?20:0;
+            if(flag)draw_flag(layer,flag,a.x1+5,y+1);
             int call_width=measured.x;
-            if(call_width>114) call_width=114;
-            draw_text(layer,a.x1+5,y,call_width+1,&qso_bold_12,ORANGE,row->callsign);
-            char country[40];snprintf(country,sizeof(country)," . %s",row->country[0]?row->country:"Unknown");
-            draw_text(layer,a.x1+call_width+7,y+1,196-call_width,&lv_font_montserrat_10,CYAN,country);
+            if(call_width>114-inset) call_width=114-inset;
+            draw_text(layer,a.x1+5+inset,y,call_width+1,&qso_bold_12,ORANGE,row->callsign);
+            char country[40];snprintf(country,sizeof(country),"%s",row->country[0]?row->country:"Unknown");
+            for(size_t j=0;country[j];++j)
+                if(country[j]>='a' && country[j]<='z')country[j]=(char)(country[j]-'a'+'A');
+            draw_text(layer,a.x1+call_width+12+inset,y+1,191-call_width-inset,&lv_font_montserrat_10,CYAN,country);
             struct tm tm;time_t epoch=(time_t)(row->started_us/1000000);localtime_r(&epoch,&tm);
             unsigned s=row->ended_us>row->started_us?(unsigned)((row->ended_us-row->started_us)/1000000):0;
             char date[48],clock[40],duration[16];
-            snprintf(date,sizeof(date),"%02d/%02d/%04d",tm.tm_mday,tm.tm_mon+1,tm.tm_year+1900);
+            snprintf(date,sizeof(date),"%02u/%02u/%02u",(unsigned)tm.tm_mday,(unsigned)(tm.tm_mon+1),(unsigned)(tm.tm_year+1900)%100);
             snprintf(clock,sizeof(clock),"%02d:%02d:%02d",tm.tm_hour,tm.tm_min,tm.tm_sec);
-            snprintf(duration,sizeof(duration),"%um%02us",s/60,s%60);
-            draw_text(layer,a.x1+5,y+11,77,&qso_text_11,INK,date);
-            draw_text(layer,a.x1+85,y+11,65,&qso_text_11,INK,clock);
-            draw_text(layer,a.x1+155,y+11,48,&qso_text_11,INK,duration);
+            snprintf(duration,sizeof(duration),"%u:%02u",s/60,s%60);
+            char ber[12],loss[12];
+            if(row->quality.valid & BM_QUALITY_BER)
+                snprintf(ber,sizeof(ber),"%u.%02u%%",row->quality.ber_centi_pct/100,row->quality.ber_centi_pct%100);
+            else snprintf(ber,sizeof(ber),"--");
+            if(row->quality.valid & BM_QUALITY_LOSS)
+                snprintf(loss,sizeof(loss),"%u.%02u%%",row->quality.loss_centi_pct/100,row->quality.loss_centi_pct%100);
+            else snprintf(loss,sizeof(loss),"--");
+            draw_text(layer,a.x1+5,y+15,43,&lv_font_montserrat_8,INK,date);
+            draw_text(layer,a.x1+51,y+15,43,&lv_font_montserrat_8,INK,clock);
+            draw_text(layer,a.x1+97,y+15,28,&lv_font_montserrat_8,INK,duration);
+            draw_text(layer,a.x1+128,y+15,34,&lv_font_montserrat_8,CYAN,ber);
+            draw_text(layer,a.x1+165,y+15,38,&lv_font_montserrat_8,LIME,loss);
         }
         return;
     }
@@ -248,20 +275,57 @@ static void eq_draw(lv_event_t *event)
     }
 }
 
+static void caller_layout(qso_ui_t *ui)
+{
+    bool show=ui->page==QSO_PAGE_MONITOR && ui->live && ui->caller_flag;
+    lv_obj_set_hidden(ui->caller_flag_view,!show);
+    lv_obj_set_x(ui->selection,show?38:16);
+    lv_obj_set_width(ui->selection,show?186:208);
+}
+
+static void draw_flag(lv_layer_t *layer, const lv_image_dsc_t *image, int x, int y)
+{
+    if(!image)return;
+    lv_draw_image_dsc_t d;lv_draw_image_dsc_init(&d);d.src=image;
+    lv_area_t area={x,y,x+QSO_FLAG_WIDTH-1,y+QSO_FLAG_HEIGHT-1};
+    lv_draw_image(layer,&d,&area);
+}
+
+static void caller_flag_draw(lv_event_t *event)
+{
+    qso_ui_t *ui=lv_event_get_user_data(event);
+    lv_area_t area;lv_obj_get_coords(ui->caller_flag_view,&area);
+    draw_flag(lv_event_get_layer(event),ui->caller_flag,area.x1,area.y1);
+}
+
 static void activity_tick(lv_timer_t *timer)
 {
     qso_ui_t *ui=lv_timer_get_user_data(timer);
-    ++ui->phase;
+    uint32_t now_ms=lv_tick_get(),elapsed=now_ms-ui->animation_ms;
+    ui->animation_ms=now_ms;
+    unsigned periods=(now_ms-ui->frame_ms)/40;
+    bool frame=periods>0;
+    if(frame){ui->frame_ms+=periods*40;ui->phase+=periods;}
     if(ui->page==QSO_PAGE_MONITOR) {
-        if(qso_eq_step(ui->eq_levels,ui->phase,ui->live))lv_obj_invalidate(ui->eq);
-        time_t now=ui->clock_now();
-        if(now!=ui->clock_second) {
-            char text[40];qso_clock_format(text,sizeof(text),now);
-            ui->clock_second=now;
-            lv_label_set_text(ui->clock,text);
+        /* Position follows elapsed time, not callback count. Delayed renders
+         * skip straight to the current position instead of slowing the strip. */
+        uint64_t advance=(uint64_t)elapsed*25+ui->hint_fraction;
+        unsigned pixels=(unsigned)(advance/1000);ui->hint_fraction=(uint32_t)(advance%1000);
+        if(pixels) {
+            ui->hint_x=-(int)(((unsigned)-ui->hint_x+pixels)%(unsigned)ui->hint_cycle);
+            lv_obj_set_x(ui->hint_text,ui->hint_x);
+        }
+        if(frame) {
+            if(qso_eq_step(ui->eq_levels,ui->phase,ui->live))lv_obj_invalidate(ui->eq);
+            time_t now=ui->clock_now();
+            if(now!=ui->clock_second) {
+                char text[40];qso_clock_format(text,sizeof(text),now);
+                ui->clock_second=now;
+                lv_label_set_text(ui->clock,text);
+            }
         }
     }
-    if(ui->charging && ui->phase%5==0)lv_obj_invalidate(ui->battery_icon);
+    if(frame && ui->charging && ui->phase%5==0)lv_obj_invalidate(ui->battery_icon);
 }
 
 bool qso_ui_create(qso_ui_t *ui)
@@ -292,36 +356,56 @@ bool qso_ui_create(qso_ui_t *ui)
     lv_obj_add_event_cb(ui->battery_icon,battery_draw,LV_EVENT_DRAW_MAIN,ui);
     ui->battery_text=label(ui->battery_icon,1,4,31,&qso_bold_11,INK,"--%");
     lv_obj_set_style_text_align(ui->battery_text,LV_TEXT_ALIGN_CENTER,0);
-    ui->body=plain(ui->screen,0,38,240,258);
+    ui->body=plain(ui->screen,0,38,240,276);
     if (!ui->body) return false;
     lv_obj_add_event_cb(ui->body,body_draw,LV_EVENT_DRAW_MAIN,ui);
     ui->title=label(ui->body,16,10,208,&lv_font_montserrat_10,CYAN,"MONITORING TALK GROUP 91");
     ui->status=label(ui->body,16,24,208,&lv_font_montserrat_10,MUTED,"Connecting...");
     ui->selection=label(ui->body,16,27,208,&qso_bold_28,ORANGE,"TG 91");
-    ui->onair=label(ui->body,16,60,208,&lv_font_montserrat_10,CYAN,"WAITING FOR QSO");
-    ui->info=label(ui->body,16,74,208,&lv_font_montserrat_10,INK,"");
+    ui->caller_flag_view=plain(ui->body,16,27,QSO_FLAG_WIDTH,QSO_FLAG_HEIGHT);
+    if(!ui->caller_flag_view)return false;
+    lv_obj_add_event_cb(ui->caller_flag_view,caller_flag_draw,LV_EVENT_DRAW_MAIN,ui);
+    ui->onair=label(ui->body,16,49,208,&lv_font_montserrat_10,CYAN,"WAITING FOR QSO");
+    ui->info=label(ui->body,16,61,208,&lv_font_montserrat_10,INK,"");
     lv_obj_set_height(ui->info,24);
     lv_label_set_long_mode(ui->info,LV_LABEL_LONG_WRAP);
     lv_obj_set_width(ui->info,142);
-    ui->clock=label(ui->body,16,98,142,&qso_text_11,CYAN,"--:--:-- --- --/--/--");
+    ui->clock=label(ui->body,16,85,142,&qso_text_11,CYAN,"--:--:-- --- --/--/--");
     if(!ui->clock)return false;
     lv_label_set_long_mode(ui->clock,LV_LABEL_LONG_CLIP);
-    ui->eq=plain(ui->body,164,67,60,42);
+    ui->eq=plain(ui->body,164,57,60,42);
     if(!ui->eq)return false;
     lv_obj_add_event_cb(ui->eq,eq_draw,LV_EVENT_DRAW_MAIN,ui);
-    ui->history_heading=label(ui->body,16,124,208,&lv_font_montserrat_10,CYAN,"RECENT QSOs / BRANDMEISTER");
+    ui->history_heading=label(ui->body,16,107,208,&lv_font_montserrat_10,CYAN,"RECENT QSOs / BRANDMEISTER");
     /* Shared menu text is a model label. List pages render bounded rows from it. */
     ui->directory=label(ui->body,16,88,208,&lv_font_montserrat_12,INK,"");
     lv_obj_set_height(ui->directory,166);
     lv_label_set_long_mode(ui->directory,LV_LABEL_LONG_WRAP);
-    ui->data_panel=plain(ui->body,16,133,208,122);
+    ui->data_panel=plain(ui->body,16,133,208,135);
     if (!ui->data_panel) return false;
     lv_obj_add_event_cb(ui->data_panel,data_draw,LV_EVENT_DRAW_MAIN,ui);
     ui->help=label(ui->screen,16,296,208,&lv_font_montserrat_8,MUTED,"");
     lv_obj_set_style_text_line_space(ui->help,0,0);
     lv_obj_set_height(ui->help,20); lv_label_set_long_mode(ui->help,LV_LABEL_LONG_WRAP);
     if (!ui->title||!ui->status||!ui->selection||!ui->onair||!ui->info||!ui->directory||!ui->help||!ui->battery_text) return false;
-    ui->timer=lv_timer_create(activity_tick,50,ui);
+    ui->hint_view=plain(ui->screen,74,307,150,10);
+    if(!ui->hint_view)return false;
+    /* Parent clipping guarantees scrolling text never paints over VOL/MUTED. */
+    lv_obj_remove_flag(ui->hint_view,LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+    ui->hint_text=label(ui->hint_view,0,0,LV_SIZE_CONTENT,&lv_font_montserrat_8,MUTED,"");
+    if(!ui->hint_text)return false;
+    lv_obj_set_style_text_line_space(ui->hint_text,0,0);
+    lv_label_set_long_mode(ui->hint_text,LV_LABEL_LONG_CLIP);
+    lv_label_set_text_static(ui->hint_text,monitor_button_hints);
+    lv_point_t hint_size;
+    lv_text_get_size(&hint_size,MONITOR_BUTTON_HINT,&lv_font_montserrat_8,0,0,LV_COORD_MAX,LV_TEXT_FLAG_NONE);
+    ui->hint_cycle=hint_size.x;
+    if(ui->hint_cycle<=150)return false;
+    ui->hint_x=0;
+    lv_obj_set_pos(ui->hint_text,ui->hint_x,0);
+    lv_obj_set_size(ui->hint_text,2*ui->hint_cycle,10);
+    ui->animation_ms=ui->frame_ms=lv_tick_get();
+    ui->timer=lv_timer_create(activity_tick,20,ui);
     if (!ui->timer) return false;
     qso_ui_page(ui,QSO_PAGE_MONITOR);
     qso_ui_menu(ui);
@@ -353,19 +437,30 @@ void qso_ui_page(qso_ui_t *ui, qso_page_t page)
     lv_obj_set_style_text_font(ui->title,monitor?&lv_font_montserrat_10:&lv_font_montserrat_20,0);
     lv_obj_set_style_text_font(ui->selection,monitor?&qso_bold_28:about?&qso_bold_14:&qso_text_14,0);
     lv_obj_set_style_text_font(ui->status,monitor?&lv_font_montserrat_10:&qso_text_12,0);
-    lv_obj_set_y(ui->title,monitor?10:6);
+    lv_obj_set_y(ui->title,monitor?4:6);
     lv_obj_set_hidden(ui->status,monitor);
+    lv_obj_set_hidden(ui->help,false);
+    lv_obj_set_pos(ui->help,16,monitor?307:296);
+    lv_obj_set_width(ui->help,monitor?50:208);
+    lv_obj_set_height(ui->help,monitor?10:20);
+    lv_obj_set_style_text_font(ui->help,&lv_font_montserrat_8,0);
+    lv_obj_set_style_text_align(ui->help,LV_TEXT_ALIGN_LEFT,0);
+    lv_obj_set_hidden(ui->hint_view,!monitor);
+    lv_obj_set_style_text_color(ui->help,lv_color_hex(monitor?CYAN:MUTED),0);
+    lv_label_set_long_mode(ui->help,monitor?LV_LABEL_LONG_CLIP:LV_LABEL_LONG_WRAP);
     lv_obj_set_y(ui->status,monitor?24:36);
-    lv_obj_set_y(ui->selection,monitor?27:55);
+    lv_obj_set_y(ui->selection,monitor?18:55);
     lv_obj_set_style_text_color(ui->selection,lv_color_hex(monitor||about?ORANGE:CYAN),0);
     lv_label_set_long_mode(ui->selection,LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_obj_set_hidden(ui->onair,!monitor); lv_obj_set_hidden(ui->info,!monitor);
     lv_obj_set_hidden(ui->eq,!monitor);lv_obj_set_hidden(ui->clock,!monitor); lv_obj_set_hidden(ui->history_heading,!monitor);
     lv_obj_set_hidden(ui->data_panel,!monitor&&!list&&!about);
     lv_obj_set_pos(ui->data_panel,monitor||about?16:12,monitor?133:86);
-    lv_obj_set_size(ui->data_panel,monitor||about?208:216,monitor?122:166);
+    lv_obj_set_size(ui->data_panel,monitor||about?208:216,monitor?135:166);
     lv_obj_set_hidden(ui->directory,monitor||list);
     lv_obj_set_style_text_font(ui->directory,&qso_text_14,0);
+    caller_layout(ui);
+    ui->animation_ms=ui->frame_ms=lv_tick_get();
     lv_obj_invalidate(ui->body);
     if(changed) {
         /* Move existing widgets only: group opacity/transforms would require
@@ -380,17 +475,33 @@ void qso_ui_page(qso_ui_t *ui, qso_page_t page)
 
 void qso_ui_status(qso_ui_t *ui, bool wifi, bool audio, bool muted, int battery, bool charging)
 {
-    ui->wifi_connected=wifi; ui->audio_connected=audio; ui->muted=muted; ui->charging=charging;
-    ui->battery_percent=battery>100?100:battery;
-    if(battery<0) lv_label_set_text(ui->battery_text,"--%");
-    else lv_label_set_text_fmt(ui->battery_text,"%d%%",ui->battery_percent);
-    lv_obj_invalidate(ui->wifi_icon); lv_obj_invalidate(ui->audio_icon); lv_obj_invalidate(ui->battery_icon);
+    bool wifi_changed=ui->wifi_connected!=wifi;
+    bool audio_changed=ui->audio_connected!=audio || ui->muted!=muted;
+    int percentage=battery>100?100:battery;
+    bool battery_changed=ui->battery_percent!=percentage || ui->charging!=charging;
+    ui->wifi_connected=wifi;ui->audio_connected=audio;ui->muted=muted;ui->charging=charging;
+    if(ui->battery_percent!=percentage) {
+        ui->battery_percent=percentage;
+        if(battery<0)lv_label_set_text(ui->battery_text,"--%");
+        else lv_label_set_text_fmt(ui->battery_text,"%d%%",percentage);
+    }
+    if(wifi_changed)lv_obj_invalidate(ui->wifi_icon);
+    if(audio_changed)lv_obj_invalidate(ui->audio_icon);
+    if(battery_changed)lv_obj_invalidate(ui->battery_icon);
+}
+
+void qso_ui_current_country(qso_ui_t *ui, const char *country)
+{
+    const lv_image_dsc_t *flag=qso_flag_image(country);
+    if(flag!=ui->caller_flag){ui->caller_flag=flag;lv_obj_invalidate(ui->caller_flag_view);}
+    caller_layout(ui);
 }
 
 void qso_ui_live(qso_ui_t *ui, bool active)
 {
     if(ui->live!=active)lv_obj_invalidate(ui->body);
     ui->live=active;
+    caller_layout(ui);
     /* The lightweight timer settles existing bars to zero on QSO end. */
 }
 
@@ -405,17 +516,18 @@ void qso_ui_about(qso_ui_t *ui, const bm_wifi_info_t *wifi, int battery)
     char text[1000];
     snprintf(text,sizeof(text),
         "WI-FI / DEVICE\nWi-Fi: %s\nSSID: %s\nSignal: %s\nIP: %s\nSubnet: %s\nGateway: %s\nDNS 1: %s\nDNS 2: %s\nDNS 3: %s\nBattery: %s\n\n"
-        "ABOUT / LICENSES\nQSO Vision for AI Passport\nBuild: 2.3 / ESP-IDF 5.5.3\n\n"
+        "ABOUT / LICENSES\nQSO Vision for AI Passport\nBuild: 2.3.3 / ESP-IDF 5.5.3\n\n"
         "Independent, receive-only app.\nBrandMeister/Hoseline APIs, data and trademarks belong to their respective owners. "
         "Access is subject to their terms. No affiliation or endorsement. "
-        "Service availability is not guaranteed. Use where permitted.",
+        "Service availability is not guaranteed. Use where permitted.\n\n"
+        "Flag pictures: flag-icons.\n%.62s",
         !wifi?"Reading...":wifi->connected?"Connected":"Disconnected",
         wifi&&wifi->connected?wifi->ssid:"--", signal,
         wifi&&wifi->ipv4_valid?wifi->ip:"--",wifi&&wifi->ipv4_valid?wifi->subnet:"--",
         wifi&&wifi->ipv4_valid?wifi->gateway:"--",
         wifi&&wifi->dns[0][0]?wifi->dns[0]:"Not configured",
         wifi&&wifi->dns[1][0]?wifi->dns[1]:"Not configured",
-        wifi&&wifi->dns[2][0]?wifi->dns[2]:"Not configured",level);
+        wifi&&wifi->dns[2][0]?wifi->dns[2]:"Not configured",level,qso_flag_license());
     if(strcmp(text,lv_label_get_text(ui->directory))) {
         int32_t y=lv_obj_get_scroll_y(ui->data_panel);
         lv_label_set_text(ui->directory,text);
@@ -454,6 +566,7 @@ void qso_ui_display_enabled(qso_ui_t *ui, bool enabled, unsigned awake_percent)
     if(awake_percent>100)awake_percent=100;
     ui->display_off=!enabled;
     if(enabled) {
+        ui->animation_ms=ui->frame_ms=lv_tick_get();
         lv_timer_resume(ui->timer);
         lv_obj_invalidate(ui->screen);
     } else lv_timer_pause(ui->timer);
@@ -482,18 +595,28 @@ void qso_ui_brightness(qso_ui_t *ui, unsigned percent)
 void qso_ui_history_position(qso_ui_t *ui, size_t offset, size_t total)
 {
     size_t first=ui->history_count?offset+1:0;
-    lv_label_set_text_fmt(ui->history_heading,"RECENT QSOs  /  %u-%u OF %u",
+    char text[64];snprintf(text,sizeof(text),"RECENT QSOs  /  %u-%u OF %u",
         (unsigned)first,(unsigned)(offset+ui->history_count),(unsigned)total);
+    if(strcmp(lv_label_get_text(ui->history_heading),text))lv_label_set_text(ui->history_heading,text);
 }
 
 void qso_ui_history(qso_ui_t *ui, const bm_qso_info_t *history, size_t count, const char *state)
 {
-    if(count>5) count=5;
-    lv_label_set_text_fmt(ui->history_heading,"RECENT QSOs  /  %u",(unsigned)count);
+    if(count>5)count=5;
+    const char *empty=!strcmp(state,"CONNECTED")?"No recent QSOs on this TG.":"Loading BrandMeister history...";
+    bool changed=count!=ui->history_count || (!count && strcmp(ui->history_empty,empty));
+    for(size_t i=0;i<count && !changed;++i) {
+        const bm_qso_info_t *old=&ui->history[i],*row=&history[i];
+        changed=old->started_us!=row->started_us || old->ended_us!=row->ended_us ||
+            strcmp(old->callsign,row->callsign) || strcmp(old->country,row->country) ||
+            old->quality.valid!=row->quality.valid ||
+            old->quality.ber_centi_pct!=row->quality.ber_centi_pct ||
+            old->quality.loss_centi_pct!=row->quality.loss_centi_pct;
+    }
+    if(!changed)return;
     ui->history_count=count;
     if(count)memcpy(ui->history,history,count*sizeof(*history));
-    snprintf(ui->history_empty,sizeof(ui->history_empty),"%s",!strcmp(state,"CONNECTED")?
-        "No recent QSOs on this TG.":"Loading BrandMeister history...");
+    snprintf(ui->history_empty,sizeof(ui->history_empty),"%s",empty);
     lv_obj_invalidate(ui->data_panel);
 }
 

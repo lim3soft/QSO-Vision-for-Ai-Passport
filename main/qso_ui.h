@@ -3,6 +3,7 @@
 #include "bm_protocol.h"
 #include "qso_ui_math.h"
 #include "wifi_info.h"
+#include "qso_flag_images.h"
 
 LV_FONT_DECLARE(qso_bold_12);
 LV_FONT_DECLARE(qso_bold_11);
@@ -22,7 +23,11 @@ typedef enum {
 typedef struct {
     lv_obj_t *screen, *body, *title, *status, *selection, *onair, *info, *directory, *help;
     lv_obj_t *audio_icon, *wifi_icon, *battery_icon, *battery_text, *eq, *clock;
-    lv_obj_t *history_heading, *data_panel;
+    lv_obj_t *history_heading, *data_panel, *hint_view, *hint_text;
+    int hint_cycle, hint_x;
+    uint32_t animation_ms, frame_ms, hint_fraction;
+    lv_obj_t *caller_flag_view;
+    const lv_image_dsc_t *caller_flag;
     lv_timer_t *timer;
     uint8_t eq_levels[QSO_EQ_BARS];
     time_t clock_second;
@@ -52,3 +57,5 @@ void qso_ui_set_backlight(qso_ui_t *ui, void (*callback)(uint8_t percent));
 
 void qso_ui_brightness(qso_ui_t *ui, unsigned percent);
 void qso_ui_history_position(qso_ui_t *ui, size_t offset, size_t total);
+
+void qso_ui_current_country(qso_ui_t *ui, const char *country);

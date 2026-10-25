@@ -200,9 +200,40 @@ static double number_field(const cJSON *object, const char *key)
     else if (cJSON_IsString(field) && field->valuestring[0]) {
         char *end;
         value = strtod(field->valuestring, &end);
-        if (*end) return -1;
+        if (end == field->valuestring || *end) return -1;
     }
     return isfinite(value) && value >= 0 && value <= 9000000000000.0 ? value : -1;
+}
+
+static bm_qso_quality_t decode_quality(const cJSON *payload)
+{
+    bm_qso_quality_t quality={0};
+    /* BM live starts/stops can contain BER=0, LossCount=TotalCount=0
+     * before the final report. Do not label that placeholder as measured BER.
+     * Nonzero BER updates are useful even before packet counters arrive. */
+    double ber=number_field(payload,"BER");
+    double loss=number_field(payload,"LossCount");
+    double total=number_field(payload,"TotalCount");
+    if(total>0 && total<=UINT32_MAX && (double)(uint32_t)total==total)
+        quality.sample_count=(uint32_t)total;
+    if (ber>=0 && ber<=1 && (ber>0 || quality.sample_count>0)) {
+        quality.ber_centi_pct=(uint16_t)(ber*10000.0+0.5);
+        quality.valid |= BM_QUALITY_BER;
+        quality.reported |= BM_QUALITY_BER;
+    } else if(cJSON_GetObjectItemCaseSensitive(payload,"BER") && ber!=0) {
+        /* Explicit null/-1 must clear a provisional value; omission must not. */
+        quality.reported |= BM_QUALITY_BER;
+    }
+    if (quality.sample_count>0 && loss>=0 && loss<=total && (double)(uint64_t)loss==loss) {
+        quality.loss_centi_pct=(uint16_t)(loss/total*10000.0);
+        quality.valid |= BM_QUALITY_LOSS;
+        quality.reported |= BM_QUALITY_LOSS;
+    } else if(cJSON_GetObjectItemCaseSensitive(payload,"LossCount") &&
+              cJSON_GetObjectItemCaseSensitive(payload,"TotalCount") &&
+              !(loss==0 && total==0)) {
+        quality.reported |= BM_QUALITY_LOSS;
+    }
+    return quality;
 }
 
 bool bm_decode_metadata(const char *message, int talkgroup, bm_qso_info_t *out)
@@ -243,6 +274,7 @@ bool bm_decode_metadata(const char *message, int talkgroup, bm_qso_info_t *out)
         if (cJSON_IsNumber(id)) snprintf(out->callsign, sizeof(out->callsign), "ID %d", id->valueint);
     }
     bm_country_label(out->country, sizeof(out->country), out->callsign);
+    out->quality = decode_quality(payload);
     out->historical = historical;
     out->started_us = (int64_t)(start * 1000000.0);
     out->ended_us = stop > 0 ? (int64_t)(stop * 1000000.0) : 0;

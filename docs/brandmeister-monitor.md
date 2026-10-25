@@ -2,7 +2,7 @@
 
 # Application architecture and service integration
 
-The complete 2.3 source is under `main/`, with the FoloToy hardware support in
+The complete 2.3.3 source is under `main/`, with the FoloToy hardware support in
 `components/bsp/`. `main/CMakeLists.txt` lists the application and generated font
 sources. Historical demo files and upstream development docs remain for reference;
 they are not the monitor's UI or entry point.
@@ -35,3 +35,5 @@ custom talkgroups and Wi-Fi passwords use the buttons.
 See [the guide](USER_GUIDE.md), [build instructions](BUILD.md), and
 [validation record](VALIDATION.md). No power-saving current measurement or
 exhaustive Wi-Fi/long-duration validation is claimed.
+
+See [flags and display performance](country-flags-and-performance.md) and [BER/loss handling](brandmeister-quality.md) for 2.3.3 details. Metadata subscribes to `dst_<TG>` to avoid unrelated talkgroup traffic; audio processing is unchanged.

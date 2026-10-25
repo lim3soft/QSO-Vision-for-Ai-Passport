@@ -21,3 +21,4 @@ jobs:
           python3 tools/verify_release.py 1.0
           python3 tools/verify_release.py 2.0
           python3 tools/verify_release.py 2.3
+          python3 tools/verify_release.py 2.3.3

@@ -1,0 +1,17 @@
+QSO VISION 2.3.3 — limesoft (9W3SPY)
+
+中文 / Chinese
+
+1. 启动后短按 OK → Options → Wi-Fi connection，选择可联网的 2.4GHz Wi-Fi 并按 OK；配网直接在设备完成，无需手机或电脑。
+2. UP/DOWN 选密码字符（长按快滚），OK 添加，双按 UP 删除，最多 25 字符；双按 OK 连接，成功保存并回主页。失败或换网时，长按 OK 返回列表重选重试。
+3. 短按 OK → Change talkgroup 选组。Custom 中 UP/DOWN 选数字、OK 添加、双按 UP 删除、双按 OK 应用并返回监听。
+4. 主页短按 UP/DOWN 逐条滚动历史，长按调音量，双按 DOWN 静音/恢复。短按 OK 进菜单，菜单内长按 OK 返回。
+5. 主页长按 OK 渐暗熄屏并继续收听，再次长按 OK 唤醒至已保存亮度；其他按键不唤醒。
+
+English
+
+1. Start the app, then short OK → Options → Wi-Fi connection. Select an internet-connected 2.4GHz network and press OK. Setup is on the device; no phone or computer is needed.
+2. UP/DOWN chooses password characters (hold to scroll faster); OK adds one, and double UP deletes. The limit is 25 characters. Double OK connects; success saves the profile and returns home. If it fails, or to change networks, long OK returns to the list so you can reselect and retry.
+3. Short OK → Change talkgroup selects a group. For Custom, UP/DOWN chooses digits, OK adds, double UP deletes, and double OK applies the number and returns to listening.
+4. At home, short UP/DOWN scrolls history one entry; hold to adjust volume, and double DOWN mutes/unmutes. Short OK opens the menu; long OK goes back inside menus.
+5. At home, long OK fades the screen off while listening continues. Another long OK wakes it at the saved brightness; other buttons do not wake it.

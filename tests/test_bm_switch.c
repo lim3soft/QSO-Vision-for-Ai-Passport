@@ -14,7 +14,7 @@ struct test_socket { bool started, connected; test_callback_t callback; unsigned
 struct test_queue { unsigned count,limit,head; size_t size; unsigned char last[2048],ring[6][2048]; };
 static int64_t clock_us=1000000;
 static bool fail_stop, fail_start;
-static unsigned writes;
+static unsigned writes, metadata_joins;
 static bool switch_during_write;
 static bool replay_mode,replay_jitter;
 static unsigned replay_next,replay_zero_blocks,replay_samples;
@@ -72,7 +72,9 @@ int xQueueReset(QueueHandle_t q) { q->count=q->head=0;return pdTRUE; }
 int xTaskCreate(void (*fn)(void *),const char *name,unsigned stack,void *arg,int priority,TaskHandle_t *task)
 { (void)fn;(void)name;(void)stack;(void)arg;(void)priority;*task=(void*)1;return pdPASS; }
 esp_websocket_client_handle_t esp_websocket_client_init(const esp_websocket_client_config_t *config)
-{ assert(config->crt_bundle_attach==esp_crt_bundle_attach);return calloc(1,sizeof(struct test_socket)); }
+{ assert(config->crt_bundle_attach==esp_crt_bundle_attach);
+  if(!strcmp(config->task_name,"bm_metadata"))assert(config->task_prio==3);
+  return calloc(1,sizeof(struct test_socket)); }
 esp_err_t esp_websocket_client_destroy(esp_websocket_client_handle_t c) { assert(!c->started);free(c);return ESP_OK; }
 esp_err_t esp_websocket_register_events(esp_websocket_client_handle_t c,int event,test_callback_t callback,void *arg)
 { (void)event;(void)arg;c->callback=callback;return ESP_OK; }
@@ -102,6 +104,10 @@ int esp_websocket_client_send_text(esp_websocket_client_handle_t c,const char *d
 {
     (void)c;(void)wait;assert(size>=0);
     if(strstr(data,"searchHouse"))assert(strstr(data,"\"amount\":15"));
+    if(strstr(data,"[\"join\"")) {
+        char expected[64];snprintf(expected,sizeof(expected),"42[\"join\",\"dst_%d\"]",(int)s_talkgroup);
+        assert(!strcmp(data,expected));++metadata_joins;
+    }
     return size;
 }
 static void connected(void)
@@ -197,7 +203,13 @@ static void test_video_regression(void)
 {
     caller_audio(5020879);
     assert(bm_metadata_start()==ESP_OK);
-    s_metadata_client->connected=true;s_metadata_ready=true;
+    s_metadata_client->connected=true;
+    const char hello[]="40{}";
+    esp_websocket_event_data_t handshake={.op_code=1,.fin=true,.data_ptr=hello,.data_len=4,.payload_len=4};
+    unsigned joins=metadata_joins;
+    metadata_event(NULL,NULL,WEBSOCKET_EVENT_CONNECTED,NULL);
+    metadata_event(NULL,NULL,WEBSOCKET_EVENT_DATA,&handshake);
+    assert(s_metadata_ready && metadata_joins==joins+1);
     metadata_query(); /* Check the production request asks for only 15 rows. */
     s_metadata_ready=false;
     bm_network_service(true);

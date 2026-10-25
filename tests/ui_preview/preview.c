@@ -11,6 +11,8 @@ static uint16_t drawbuffer[240*20];
 static qso_ui_t ui;
 static unsigned backlight=100;
 static time_t preview_wall=1792897445;
+static unsigned history_draws;
+static void count_history_draw(lv_event_t *event){(void)event;++history_draws;}
 static time_t preview_clock_now(void) { return preview_wall; }
 static void set_backlight(uint8_t value) { backlight=value; }
 
@@ -71,23 +73,47 @@ int main(void)
     lv_label_set_text(ui.selection,"9W3SPY");
     lv_label_set_text(ui.onair,"CURRENTLY ON AIR");
     lv_label_set_text(ui.info,"Sample operator\nMalaysia . 00:24");
-    lv_label_set_text(ui.help,"UP/DOWN history  HOLD +/- vol 85%\nOK menu  2xDOWN mute  HOLD OK off");
+    lv_label_set_text(ui.help,"VOL-85%");
     bm_qso_info_t history[5]={0};
     const char *calls[]={"UB3XCM","R2ADU","VK2TEST","JA1TEST","K1TEST"};
     const char *countries[]={"Russia","Russia","Australia","Japan","United States"};
     for(unsigned i=0;i<5;++i) {
         snprintf(history[i].callsign,sizeof(history[i].callsign),"%s",calls[i]);
         snprintf(history[i].country,sizeof(history[i].country),"%s",countries[i]);
+        history[i].quality=(bm_qso_quality_t){.valid=i==4?0:3,
+            .ber_centi_pct=i==3?10000:(uint16_t)(i*37),
+            .loss_centi_pct=i==3?10000:(uint16_t)(i*125)};
         history[i].started_us=1792787948000000LL-i*65000000LL;
         history[i].ended_us=history[i].started_us+(17+i*3)*1000000LL;
     }
     qso_ui_history(&ui,history,5,"CONNECTED");
+    assert(!lv_obj_has_flag(ui.help,LV_OBJ_FLAG_HIDDEN));
+    lv_point_t footer_size;
+    lv_text_get_size(&footer_size,"VOL-100%",&lv_font_montserrat_8,0,0,LV_COORD_MAX,LV_TEXT_FLAG_NONE);
+    assert(footer_size.x<=50 && footer_size.y<=10);
+    /* Approved one-row detail columns: maximum display values must fit. */
+    const char *detail_values[]={"31/12/99","23:59:59","999:59","100.00%","100.00%"};
+    const int detail_widths[]={43,43,28,34,38};
+    for(unsigned column=0;column<5;++column) {
+        lv_point_t size;
+        lv_text_get_size(&size,detail_values[column],&lv_font_montserrat_8,0,0,LV_COORD_MAX,LV_TEXT_FLAG_NONE);
+        assert(size.x<=detail_widths[column] && size.y<=11);
+    }
     qso_ui_history_position(&ui,0,15);
     assert(strstr(lv_label_get_text(ui.history_heading),"1-5 OF 15"));
-    qso_ui_live(&ui,true);ticks(8);dump("on-air");
-    lv_label_set_text(ui.help,"QSO VISION 2.3 / UI PREVIEW\nSample data / rendered illustration");
+    qso_ui_live(&ui,true);qso_ui_current_country(&ui,"Malaysia");ticks(8);dump("on-air");
+    assert(ui.caller_flag==qso_flag_image("MY") && !lv_obj_has_flag(ui.caller_flag_view,LV_OBJ_FLAG_HIDDEN));
+    lv_area_t flag_area,call_area;
+    lv_obj_get_coords(ui.caller_flag_view,&flag_area);lv_obj_get_coords(ui.selection,&call_area);
+    assert(flag_area.x2<call_area.x1 && call_area.x2<=224);
+    lv_obj_add_event_cb(ui.data_panel,count_history_draw,LV_EVENT_DRAW_MAIN,NULL);
+    ticks(1);unsigned history_before=history_draws;
+    qso_ui_history(&ui,history,5,"CONNECTED");qso_ui_history_position(&ui,0,15);
+    qso_ui_status(&ui,true,true,false,86,false);ticks(1);
+    assert(history_draws==history_before); /* No full history redraw for unchanged snapshots. */
+    lv_label_set_text(ui.help,"PREVIEW");
     ticks(1);dump("community-cover");
-    lv_label_set_text(ui.help,"UP/DOWN history  HOLD +/- vol 85%\nOK menu  2xDOWN mute  HOLD OK off");
+    lv_label_set_text(ui.help,"VOL-85%");
     ticks(1);
     lv_area_t eq_area,clock_area,info_area;
     lv_obj_get_coords(ui.eq,&eq_area);lv_obj_get_coords(ui.clock,&clock_area);
@@ -114,10 +140,11 @@ int main(void)
     assert(!strcmp(lv_label_get_text(ui.clock),expected));
     uint16_t speaker_pixels[16*16];
     for(int y=0;y<16;++y) memcpy(speaker_pixels+y*16,framebuffer+(15+y)*240+162,32);
-    qso_ui_status(&ui,true,true,true,86,false);ticks(2);dump("muted");
+    qso_ui_status(&ui,true,true,true,86,false);lv_label_set_text(ui.help,"MUTED");ticks(2);dump("muted");
     bool speaker_changed=false;
     for(int y=0;y<16;++y) if(memcmp(speaker_pixels+y*16,framebuffer+(15+y)*240+162,32)) speaker_changed=true;
     assert(speaker_changed && ui.audio_connected && ui.muted);
+    lv_label_set_text(ui.help,"VOL-85%");
     qso_ui_status(&ui,true,true,false,86,true);ticks(2);dump("charging");
     uint16_t battery_pixels[36*15];
     for(int y=0;y<15;++y) memcpy(battery_pixels+y*36,framebuffer+(15+y)*240+188,72);
@@ -137,14 +164,42 @@ int main(void)
     preview_wall=1792897445;ticks(1);
     uint16_t card_pixel=framebuffer[55*240+10];
     lv_area_t a;lv_obj_get_coords(ui.data_panel,&a);
-    assert(a.x1>=0&&a.x2<240&&a.y2<299);
+    lv_area_t footer_area;lv_obj_get_coords(ui.help,&footer_area);
+    assert(a.x1>=0&&a.x2<240&&a.y2<footer_area.y1);
+    assert(footer_area.y1==307 && footer_area.y2<320);
+    lv_area_t hint_area;lv_obj_get_coords(ui.hint_view,&hint_area);
+    assert(hint_area.x1>footer_area.x2 && hint_area.y1==footer_area.y1 && hint_area.x2<240);
+    assert(!lv_obj_has_flag(ui.hint_view,LV_OBJ_FLAG_OVERFLOW_VISIBLE));
+    assert(lv_obj_get_parent(ui.hint_text)==ui.hint_view);
+    uint16_t status_pixels[50*10],hint_pixels[150*10];
+    for(int y=0;y<10;++y) {
+        memcpy(status_pixels+y*50,framebuffer+(307+y)*240+16,100);
+        memcpy(hint_pixels+y*150,framebuffer+(307+y)*240+74,300);
+    }
+    int hint_start=ui.hint_x;ticks(20);
+    assert(ui.hint_x==-(int)(((unsigned)-hint_start+25)%(unsigned)ui.hint_cycle));
+    /* One second advances 25 pixels left, independent of callback timing. */
+    bool hint_changed=false;
+    for(int y=0;y<10;++y) {
+        assert(!memcmp(status_pixels+y*50,framebuffer+(307+y)*240+16,100));
+        if(memcmp(hint_pixels+y*150,framebuffer+(307+y)*240+74,300))hint_changed=true;
+    }
+    assert(hint_changed);dump("footer-scroll");
+    int hint_before_cycle=ui.hint_x;
+    lv_tick_inc((unsigned)ui.hint_cycle*40);lv_timer_handler();lv_refr_now(NULL);
+    assert(ui.hint_x==hint_before_cycle); /* Complete loop, even after a delayed callback. */
     qso_ui_page(&ui,QSO_PAGE_OPTIONS);
     assert(!lv_obj_has_flag(ui.status,LV_OBJ_FLAG_HIDDEN));
+    assert(!lv_obj_has_flag(ui.help,LV_OBJ_FLAG_HIDDEN));
+    assert(lv_obj_has_flag(ui.hint_view,LV_OBJ_FLAG_HIDDEN));
+    assert(lv_obj_has_flag(ui.caller_flag_view,LV_OBJ_FLAG_HIDDEN));
+    int hint_menu_x=ui.hint_x;
     lv_label_set_text(ui.title,"Options");lv_label_set_text(ui.status,"QSO VISION / SETTINGS");
     lv_label_set_text(ui.selection,"Choose a setting");
     lv_label_set_text(ui.directory,"> Change talkgroup\n  Wi-Fi connection\n  Screen brightness\n  Screen timeout\n  About");
     lv_label_set_text(ui.help,"UP/DOWN select  OK open\nHOLD OK return");
     qso_ui_menu(&ui);ticks(6);dump("options");
+    assert(ui.hint_x==hint_menu_x);
     assert(framebuffer[55*240+10]!=card_pixel); /* Monitor card is absent here. */
     assert(lv_obj_has_flag(ui.eq,LV_OBJ_FLAG_HIDDEN));
     assert(lv_obj_has_flag(ui.clock,LV_OBJ_FLAG_HIDDEN));
@@ -264,6 +319,13 @@ int main(void)
     qso_ui_page(&ui,QSO_PAGE_MONITOR);qso_ui_history(&ui,history,5,"CONNECTED");ticks(6);
     assert(!lv_obj_has_flag(ui.data_panel,LV_OBJ_FLAG_HIDDEN));
     assert(lv_obj_get_parent(ui.directory)==ui.body);
+    qso_ui_live(&ui,true);qso_ui_current_country(&ui,"Unknown");ticks(1);
+    assert(lv_obj_has_flag(ui.caller_flag_view,LV_OBJ_FLAG_HIDDEN));
+    assert(lv_obj_get_x(ui.selection)==16 && lv_obj_get_width(ui.selection)==208);
+    qso_ui_current_country(&ui,"Hong Kong");ticks(1);
+    assert(ui.caller_flag==qso_flag_image("HK"));
+    qso_ui_live(&ui,false);ticks(1);
+    assert(lv_obj_has_flag(ui.caller_flag_view,LV_OBJ_FLAG_HIDDEN));
     assert(lv_obj_get_scroll_y(ui.data_panel)==0);
     assert(lv_obj_has_flag(ui.status,LV_OBJ_FLAG_HIDDEN));
     lv_label_set_text(ui.title,"MONITORING TALK GROUP 99999999");

@@ -18,10 +18,26 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
 #include "esp_timer.h"
 #include <time.h>
 
 static const char *TAG = "bm_monitor";
+
+/* Do not reallocate/repaint static monitor labels every 500 ms. */
+static void monitor_text(lv_obj_t *object, const char *text)
+{
+    if(strcmp(lv_label_get_text(object),text))lv_label_set_text(object,text);
+}
+static void monitor_text_fmt(lv_obj_t *object, const char *format, ...)
+{
+    char text[160];va_list args;va_start(args,format);
+    vsnprintf(text,sizeof(text),format,args);va_end(args);
+    monitor_text(object,text);
+}
+
 static lv_obj_t *s_screen;
 static lv_obj_t *s_status, *s_tg, *s_selection, *s_directory, *s_help;
 static lv_obj_t *s_onair, *s_qso_info;
@@ -369,26 +385,27 @@ static void render_content_locked(void) {
     if (on_air && s_qso_started_us == 0) s_qso_started_us = esp_timer_get_time();
     if (!on_air && s_qso_started_us != 0 &&
         esp_timer_get_time() - s_qso_started_us > 2000000) s_qso_started_us = 0;
-    lv_label_set_text_fmt(s_tg, "MONITORING TALK GROUP %d", s_talkgroup);
-    if (on_air) lv_label_set_text(s_selection, metadata_on_air ? current.callsign : "RECEIVING");
-    else lv_label_set_text_fmt(s_selection, "TG %d", s_talkgroup);
-    lv_label_set_text(s_onair, on_air ? "CURRENTLY ON AIR" : "WAITING FOR QSO");
+    monitor_text_fmt(s_tg, "MONITORING TALK GROUP %d", s_talkgroup);
+    if (on_air) monitor_text(s_selection, metadata_on_air ? current.callsign : "RECEIVING");
+    else monitor_text_fmt(s_selection, "TG %d", s_talkgroup);
+    monitor_text(s_onair, on_air ? "CURRENTLY ON AIR" : "WAITING FOR QSO");
     if (on_air && metadata_on_air) {
         unsigned long seconds = current.elapsed_seconds;
-        lv_label_set_text_fmt(s_qso_info, "%.30s\n%s . %02lu:%02lu",
+        monitor_text_fmt(s_qso_info, "%.30s\n%s . %02lu:%02lu",
             current.name[0] ? current.name : "Name unavailable",
             current.country[0] ? current.country : "Country unavailable", seconds/60, seconds%60);
     } else if (on_air && s_qso_started_us != 0)
-        lv_label_set_text_fmt(s_qso_info, "Caller metadata pending  %lus",
+        monitor_text_fmt(s_qso_info, "Caller metadata pending  %lus",
                               (unsigned long)((esp_timer_get_time() - s_qso_started_us) / 1000000));
     else
-        lv_label_set_text(s_qso_info, "No active transmission");
+        monitor_text(s_qso_info, "No active transmission");
     qso_ui_live(&s_ui,on_air);
+    qso_ui_current_country(&s_ui,on_air && metadata_on_air?current.country:NULL);
     qso_ui_history(&s_ui,history,history_count,bm_metadata_state_text());
     qso_ui_history_position(&s_ui,s_history_offset,s_history_total);
-    lv_label_set_text(s_status, "");
-    lv_label_set_text_fmt(s_help, "UP/DOWN history  HOLD +/- vol %d%%\nOK menu  2xDOWN %s  HOLD OK off",
-                          s_volume, s_muted ? "unmute" : "mute");
+    monitor_text(s_status, "");
+    if(s_muted)monitor_text(s_help,"MUTED");
+    else monitor_text_fmt(s_help,"VOL-%d%%",s_volume);
 }
 static void refresh_locked(void)
 {

@@ -36,7 +36,7 @@ typedef struct {
 } esp_websocket_event_data_t;
 typedef struct {
     const char *uri, *subprotocol, *task_name;
-    int buffer_size, task_stack, network_timeout_ms, reconnect_timeout_ms;
+    int buffer_size, task_stack, task_prio, network_timeout_ms, reconnect_timeout_ms;
     void *crt_bundle_attach;
 } esp_websocket_client_config_t;
 typedef void (*test_callback_t)(void *,esp_event_base_t,int32_t,void *);

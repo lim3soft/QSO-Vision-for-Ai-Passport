@@ -112,7 +112,10 @@ static void metadata_publish(const bm_qso_info_t *item, uint32_t generation)
     bm_identity_enrich(&s_identities,&enriched);
     bm_qso_store_apply(&s_qso_store, &enriched, now, (int64_t)wall_now);
     taskEXIT_CRITICAL(&s_metadata_mux);
-    ESP_LOGI(TAG, "QSO metadata received TG=%d %s", (int)s_talkgroup, item->active ? "start" : "stop");
+    char quality[48];bm_quality_format(quality,sizeof(quality),&item->quality);
+    ESP_LOGI(TAG, "QSO metadata received TG=%d %s samples=%lu %s", (int)s_talkgroup,
+        item->active ? "start/update" : "stop/history",
+        (unsigned long)item->quality.sample_count,quality);
 }
 
 static void metadata_event(void *arg, esp_event_base_t base, int32_t id, void *data)
@@ -142,7 +145,10 @@ static void metadata_event(void *arg, esp_event_base_t base, int32_t id, void *d
     } else if (!strncmp(text, "40", 2)) {
         s_metadata_ready = true;
         s_metadata_status = "CONNECTED";
-        (void)metadata_send("42[\"join\",\"everything\"]");
+        /* Official dashboard uses dst_<TG> rooms. Avoid decrypting and
+         * dispatching the worldwide metadata stream on this single-core MCU. */
+        char room[64];snprintf(room,sizeof(room),"42[\"join\",\"dst_%d\"]",(int)s_talkgroup);
+        (void)metadata_send(room);
         (void)metadata_send("42[\"sendCurrentSessions\"]");
         metadata_query();
         log_memory("Metadata ready");
@@ -175,6 +181,7 @@ esp_err_t bm_metadata_start(void)
     esp_websocket_client_config_t config = {
         .uri = "wss://api.brandmeister.network/lh/?EIO=4&transport=websocket&version=2",
         .task_name = "bm_metadata",
+        .task_prio = 3, /* Below audio ingress/playback and display work. */
         .buffer_size = 1024,
         .task_stack = 6144,
         .network_timeout_ms = 5000,

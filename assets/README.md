@@ -12,6 +12,10 @@ Keep each asset in the matching subdirectory and document its destination, namin
 
 Store reusable font files and generated font sources in `fonts/`.
 
+QSO Vision uses [compact DejaVu bold and regular fonts](fonts/README.md) for its
+wordmark, callsigns, readable menus and date/time text. Source, license, glyph coverage, and conversion
+commands are recorded with the assets.
+
 - Use descriptive names that include the family, weight, size, and format when relevant.
 - Document the source, license, character range, conversion command, and expected destination.
 - Check Flash and internal-RAM impact before adding a font; the ESP32-C3 has no PSRAM.
@@ -60,9 +64,15 @@ Decoded 80-byte SHA-256:
 This is a fuel-gauge profile, not a charging configuration or a generic profile
 for every 500 mAh cell; see the [hardware guide](../docs/hardware-design/AI_HARDWARE_DEVELOPMENT_GUIDE.md#9-cw2017-fuel-gauge).
 
-## QSO VISION screenshots
+## QSO monitor layout references
 
-`images/qso-vision/` contains on-air, idle, options, brightness, timeout and About
-previews rendered to completion by the application's native LVGL test renderer.
-They use sample data and are not device photographs/live captures. Images are
-for the project README and guide, not embedded in the firmware.
+`images/qso-monitor-reference/soundEQBAR.png` is the user's marked device photo;
+`images/qso-monitor-reference/soundbar.png` is the user's EQ-style reference.
+Retained unchanged for layout work, not embedded in the firmware. The latter
+contains a stock-image watermark and has no supplied redistribution license;
+the application draws its own segmented bars with LVGL instead of copying pixels.
+
+## Offline flags
+
+[Country flags](images/country-flags/README.md): 256 MIT-licensed 16x12 RGB565 pictures,
+SVG sources, registry and reproducible conversion for QSO Vision.

@@ -4,3 +4,5 @@ Hardware support/template: FoloToy/ai-passport, base commit 006c227, MIT License
 DejaVu font terms: assets/fonts/DejaVu-LICENSE.txt.
 ESP-IDF and managed dependencies retain their own licenses; manifests/lock identify dependencies.
 Independent receive-only application, not affiliated with or endorsed by BrandMeister, Hoseline, RadioID or FoloToy. Service access, data and trademarks remain subject to their owners' terms.
+Flag artwork: flag-icons 7.6.0, copyright (c) 2013 Panayiotis Lipiridis, MIT.
+Full license: assets/images/country-flags/LICENSE and firmware/2.3.3/FLAG-ICONS-LICENSE.txt; also embedded in firmware.

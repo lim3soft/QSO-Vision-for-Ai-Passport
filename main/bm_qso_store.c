@@ -20,6 +20,9 @@ void bm_qso_store_apply(bm_qso_store_t *store, const bm_qso_info_t *item,
         }
         bm_qso_info_t current=*item;
         if(same_current) {
+            bm_qso_quality_t quality=store->current.quality;
+            bm_quality_merge(&quality,&current.quality);
+            current.quality=quality;
             if((!current.callsign[0] || !strncmp(current.callsign,"ID ",3)) && store->current.callsign[0])
                 memcpy(current.callsign,store->current.callsign,sizeof(current.callsign));
             if(!current.name[0])memcpy(current.name,store->current.name,sizeof(current.name));
@@ -31,6 +34,10 @@ void bm_qso_store_apply(bm_qso_store_t *store, const bm_qso_info_t *item,
     }
     bm_qso_info_t completed = *item;
     if (same_current) {
+        bm_qso_quality_t quality=store->current.quality;
+        bm_quality_merge(&quality,&completed.quality);
+        completed.quality=quality;
+        store->current.quality=quality;
         if (!completed.source_id) completed.source_id=store->current.source_id;
         if ((!completed.callsign[0] || !strncmp(completed.callsign,"ID ",3)) && store->current.callsign[0])
             memcpy(completed.callsign, store->current.callsign, sizeof(completed.callsign));
@@ -42,6 +49,20 @@ void bm_qso_store_apply(bm_qso_store_t *store, const bm_qso_info_t *item,
         /* Multiple BM masters can report one session with different Stop
          * values. Keep the longest completed report, with its caller fields. */
         bm_qso_history_row_t *old = &store->history[existing];
+        /* Compare measured packet counts before end timestamps: BM emits a
+         * zero-counter stop, then a final report whose Stop can be earlier.
+         * The final measurement must win without shortening the history row. */
+        if (completed.quality.sample_count > old->quality.sample_count ||
+            (completed.quality.sample_count == old->quality.sample_count &&
+             completed.ended_us >= old->ended_us))
+            bm_quality_merge(&old->quality,&completed.quality);
+        else {
+            bm_qso_quality_t missing=completed.quality;
+            uint8_t known=old->quality.reported | old->quality.valid;
+            missing.valid &= (uint8_t)~known;
+            missing.reported &= (uint8_t)~known;
+            bm_quality_merge(&old->quality,&missing);
+        }
         if(!old->source_id)old->source_id=completed.source_id;
         if (completed.ended_us > old->ended_us) old->ended_us = completed.ended_us;
         if (completed.callsign[0] && (strncmp(completed.callsign,"ID ",3) || !old->callsign[0]))
@@ -57,7 +78,7 @@ void bm_qso_store_apply(bm_qso_store_t *store, const bm_qso_info_t *item,
     bm_qso_history_row_t *row=&store->history[pos];
     memset(row,0,sizeof(*row));
     row->started_us=completed.started_us;row->ended_us=completed.ended_us;
-    row->source_id=completed.source_id;
+    row->source_id=completed.source_id;row->quality=completed.quality;
     memcpy(row->session,completed.session,sizeof(row->session));
     memcpy(row->callsign,completed.callsign,sizeof(row->callsign));
     memcpy(row->country,completed.country,sizeof(row->country));
@@ -79,7 +100,7 @@ size_t bm_qso_store_page(const bm_qso_store_t *store, bm_qso_info_t *out,
     for(size_t i=0;i<n;++i) {
         const bm_qso_history_row_t *row=&store->history[*offset+i];
         memset(&out[i],0,sizeof(out[i]));
-        out[i].historical=true;out[i].source_id=row->source_id;
+        out[i].historical=true;out[i].source_id=row->source_id;out[i].quality=row->quality;
         out[i].started_us=row->started_us;out[i].ended_us=row->ended_us;
         memcpy(out[i].session,row->session,sizeof(row->session));
         memcpy(out[i].callsign,row->callsign,sizeof(row->callsign));
