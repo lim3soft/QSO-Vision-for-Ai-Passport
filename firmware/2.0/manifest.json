@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "artifact": "QSO-Vision.bin",
+  "format": "complete merged ESP firmware",
+  "target": "esp32c3",
+  "flash_size_bytes": 8388608,
+  "flash_offset": "0x0",
+  "sha256": "ec51d5b47d7d669c64b3930c9f2d2b5d39e51d2bd617db20c408798b2f8ee904",
+  "size": 1726512,
+  "matching_elf_sha256": "05d8b6ba1b44417f6e3b8b9f27f4d62a5742350307b39441ec8ce10939dba35f",
+  "source_status": "historical firmware archive; matching application source snapshot unavailable",
+  "version_evidence": "Embedded About text: Build: 2.0; previously published community firmware digest matches",
+  "validation": "Original merged-image/debug archive verified; historical public build, not re-tested now"
+}

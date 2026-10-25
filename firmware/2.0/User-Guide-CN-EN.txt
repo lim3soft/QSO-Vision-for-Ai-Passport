@@ -1,0 +1,113 @@
+QSO VISION — 使用指南 / USER GUIDE
+开发者 / Developer: limesoft (9W3SPY)
+固件文件 / Firmware: QSO-Vision.bin
+
+==================== 中文 ====================
+
+QSO VISION 将 AI Passport 变成随身 BrandMeister 通话组收听器。连接互联网 Wi-Fi 后，即可通过实体按键选择通话组、收听语音，并在服务提供资料时查看当前呼号及最近五条 QSO。本应用仅接收，不提供发射功能；设备界面为英文。
+
+1. 快速开始
+• 安装 QSO-Vision.bin 后重启。通过社区安装入口安装；手动刷写此完整固件时，起始地址为 0x0。安装可能清除已有设置，届时需重新配网。
+• 主页短按 OK → Options → Wi-Fi connection，选择自己的网络并连接。
+• 再从主页短按 OK → Change talkgroup，选择要收听的组。选择后自动回到监听主页。
+
+2. 主要按键
+监听主页：
+• 短按 UP / DOWN：增大 / 减小音量。
+• 长按 DOWN：静音 / 取消静音。
+• 短按 OK：进入 Options 选项菜单。
+• 长按 OK：屏幕渐暗熄灭，音频继续播放。
+• 熄屏后再次长按 OK：屏幕渐亮唤醒；其他按键不会唤醒屏幕。
+菜单页面：UP / DOWN 移动选择，短按 OK 确认，长按 OK 返回。
+“双按”指快速按两次，和长按不同。
+
+3. Wi-Fi 配网与密码输入
+• 路径：主页短按 OK → Wi-Fi connection。等待扫描后，用 UP / DOWN 选中 SSID，短按 OK。
+• 密码输入：UP / DOWN 切换字符；长按 UP / DOWN 加快滚动；短按 OK 添加当前字符；双按 UP 删除最后一个字符。
+• 字符顺序：0–9、a–z、A–Z、空格及屏幕支持的特殊字符。密码最多 25 个字符，输入时明文显示，请自行核对。
+• 密码输入完成后，双按 OK 开始连接。连接成功后保存配置，并自动返回监听主页。
+• 无密码网络会直接开始连接。密码错误或连接失败时，长按 OK 返回列表，重新选择网络并修改密码；也可选择其他网络。
+• 未发现网络时按 OK 重新扫描；退出并再次进入 Wi-Fi connection 也会重新扫描。仅打开扫描列表不会主动替换当前网络配置。
+• 配网在设备上完成，无需手机或电脑辅助输入。
+
+4. 已保存网络
+• 在 Wi-Fi 列表选择已保存且可用的网络，按 OK，使用保存的密码连接。
+• 开机时应用尝试重连上次保存的网络。离开覆盖范围的已保存网络显示 SAVED/OFFLINE。
+• 修改密码：在网络列表选中该配置，双按 DOWN，编辑后双按 OK 连接。
+• 删除配置：在网络列表选中已保存网络，双按 UP。注意：此操作删除网络配置；只有密码输入页面中的双按 UP 才是删除最后一个字符。
+
+5. 选择通话组
+路径：主页短按 OK → Change talkgroup。
+预设组：91、45401、46001、46020、50210。
+用 UP / DOWN 选择，短按 OK 应用并返回监听主页。
+自定义组：选择 Other / Custom 后，UP / DOWN 选择数字，短按 OK 添加，双按 UP 删除最后一位，双按 OK 应用。长按 OK 取消并返回。支持的自定义组号范围为 91–16777215。
+
+6. 查看状态与通联记录
+• MONITORING TALK GROUP 显示当前监听组。
+• 有资料时，当前呼号以橙色显示，下方为姓名、国家和时长；活动期间显示动态波形，空闲时为平线。
+• RECENT QSOs 最多显示五条历史记录：橙色呼号、青色国家，以及日期、时间和时长。
+• Wi-Fi 图标反映无线网络连接状态；连接 Wi-Fi 不保证该网络一定可访问互联网。
+• 扬声器图标绿色表示 Hoseline 已连接，红色表示未连接；静音时图标改变。绿色不代表一定有人正在通话。
+• 电量高于 20% 为绿色，11–20% 为黄色，10% 及以下为红色。本版不提供实时充电检测动画。
+• Options → About 可查看 SSID、信号强度、IP、子网、网关、DNS、电量及应用说明。UP / DOWN 滚动，长按 OK 返回。
+
+7. 使用提示
+• 无声音时，先确认未静音、音量合适、组号正确，并检查网络和 Hoseline 连接；通话组空闲时没有声音。
+• 呼号、姓名、国家及历史依赖外部服务，可能延迟或不完整；并非所有通话组都有可用音频。
+• 本版自定义组号使用按键输入，不提供语音识别。
+• 本应用由 limesoft (9W3SPY) 独立开发，与 BrandMeister 或 Hoseline 无隶属或背书关系。相关服务、资料及商标归各自权利人所有，请按服务适用条款使用。
+
+==================== ENGLISH ====================
+
+QSO VISION turns AI Passport into a portable BrandMeister talkgroup listener. Connect to internet-enabled Wi-Fi, select a talkgroup with the buttons, and listen. Current caller details and the latest five QSOs appear when the service provides them. This is a receive-only app; it does not transmit. The device interface is in English.
+
+1. QUICK START
+• Install QSO-Vision.bin through the community installation entry and restart. For manual flashing, this complete firmware starts at address 0x0. Installation may reset existing settings, requiring Wi-Fi setup again.
+• From the home screen, short OK → Options → Wi-Fi connection. Select and connect to your network.
+• From home, short OK → Change talkgroup. Choose a group; the app returns to the monitoring screen automatically.
+
+2. MAIN BUTTON CONTROLS
+On the monitoring screen:
+• Short UP / DOWN: increase / decrease volume.
+• Long DOWN: mute / unmute.
+• Short OK: open Options.
+• Long OK: fade the screen off while audio continues.
+• While the screen is off, another long OK fades it back on. Other buttons do not wake it.
+Inside menus: UP / DOWN moves the selection, short OK confirms, and long OK goes back.
+“Double-press” means two quick presses, rather than holding the button.
+
+3. WI-FI SETUP AND PASSWORD ENTRY
+• Path: short OK from home → Wi-Fi connection. Wait for scanning, use UP / DOWN to select the SSID, then short OK.
+• Password entry: UP / DOWN selects a character; hold either button to scroll faster. Short OK adds the selected character. Double UP deletes the last character.
+• Character order: 0–9, a–z, A–Z, then space and the supported special characters shown on screen. Passwords are limited to 25 characters and are displayed in clear text for checking.
+• When finished, double OK starts connecting. Success saves the profile and automatically returns to monitoring.
+• Open networks start connecting without a password prompt. If the password is wrong or connection fails, long OK returns to the list so you can reselect the network and correct the password, or choose another network.
+• If no networks are found, press OK to rescan. Leaving and reopening Wi-Fi connection also starts a scan. Opening the scan list alone does not intentionally replace the active network profile.
+• Network setup is performed on the device; no phone or computer is needed to enter credentials.
+
+4. SAVED NETWORKS
+• Select an available saved network and press OK to connect using its saved password.
+• At startup, the app attempts to reconnect to the last saved network. Saved networks outside scan range show SAVED/OFFLINE.
+• Edit a password: highlight the saved network in the list, double DOWN, edit the password, then double OK to connect.
+• Delete a profile: highlight the saved network in the list and double UP. This deletes the network profile. Double UP deletes a single character only while you are in the password editor.
+
+5. TALKGROUP SELECTION
+Path: short OK from home → Change talkgroup.
+Presets: 91, 45401, 46001, 46020 and 50210.
+Use UP / DOWN to select, then short OK to apply and return to monitoring.
+For Other / Custom, UP / DOWN chooses a digit, short OK appends it, double UP deletes the last digit, and double OK applies the number. Long OK cancels and goes back. Supported custom IDs range from 91 to 16777215.
+
+6. STATUS AND QSO HISTORY
+• MONITORING TALK GROUP shows the selected group.
+• When available, the current callsign is orange, with name, country and duration below. The activity waveform animates during reception and becomes a flat line while idle.
+• RECENT QSOs displays up to five records: orange callsign, cyan country, date, time and duration.
+• The Wi-Fi icon reflects wireless connection status. Being connected to Wi-Fi does not guarantee internet access.
+• A green speaker connection icon means Hoseline is connected; red means disconnected. The icon changes when muted. Green does not guarantee someone is currently transmitting.
+• Battery is green above 20%, yellow at 11–20%, and red at 10% or less. Live charging detection/animation is not provided in this release.
+• Options → About shows SSID, signal strength, IP, subnet, gateway, DNS, battery and app information. UP / DOWN scrolls; long OK returns.
+
+7. USEFUL NOTES
+• If there is no sound, check mute, volume, the selected group, Wi-Fi and Hoseline connection. An idle talkgroup is silent.
+• Callsign, name, country and history depend on external services and may be delayed or incomplete. Not every talkgroup has available audio.
+• Custom talkgroups use button entry; voice recognition is not included in this release.
+• Independently developed by limesoft (9W3SPY), with no affiliation with or endorsement by BrandMeister or Hoseline. Service names, data and trademarks belong to their respective owners. Use the services according to their applicable terms.
