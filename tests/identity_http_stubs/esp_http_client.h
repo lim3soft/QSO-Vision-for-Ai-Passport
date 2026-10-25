@@ -1,0 +1,20 @@
+#pragma once
+#include "esp_err.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+typedef struct http_fake *esp_http_client_handle_t;
+typedef struct {
+    const char *url,*user_agent;
+    int timeout_ms,buffer_size,buffer_size_tx;
+    void *crt_bundle_attach;
+    bool disable_auto_redirect;
+} esp_http_client_config_t;
+esp_http_client_handle_t esp_http_client_init(const esp_http_client_config_t *config);
+esp_err_t esp_http_client_open(esp_http_client_handle_t client,int length);
+int64_t esp_http_client_fetch_headers(esp_http_client_handle_t client);
+int esp_http_client_get_status_code(esp_http_client_handle_t client);
+int esp_http_client_read(esp_http_client_handle_t client,char *buffer,int length);
+bool esp_http_client_is_complete_data_received(esp_http_client_handle_t client);
+esp_err_t esp_http_client_close(esp_http_client_handle_t client);
+esp_err_t esp_http_client_cleanup(esp_http_client_handle_t client);

@@ -1,0 +1,6 @@
+QSO VISION for AI Passport
+Application: limesoft (9W3SPY).
+Hardware support/template: FoloToy/ai-passport, base commit 006c227, MIT License (LICENSE).
+DejaVu font terms: assets/fonts/DejaVu-LICENSE.txt.
+ESP-IDF and managed dependencies retain their own licenses; manifests/lock identify dependencies.
+Independent receive-only application, not affiliated with or endorsed by BrandMeister, Hoseline, RadioID or FoloToy. Service access, data and trademarks remain subject to their owners' terms.

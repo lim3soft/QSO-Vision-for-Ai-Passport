@@ -13,4 +13,8 @@ assert len(data)==m['size']
 assert hashlib.sha256(data).hexdigest()==m['sha256']
 assert ('Build: '+version).encode() in data
 assert (p/'SHA256SUMS.txt').read_text()==m['sha256']+'  QSO-Vision.bin\n'
+if version=='2.3':
+    for name,digest in json.loads((p/'source-sha256.json').read_text()).items():
+        source=(root/name).resolve();source.relative_to(root)
+        assert hashlib.sha256(source.read_bytes()).hexdigest()==digest,name
 print('Verified QSO VISION',version,len(data),'bytes;',m['sha256'])

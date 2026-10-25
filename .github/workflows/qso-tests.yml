@@ -1,0 +1,23 @@
+name: QSO application tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install host JSON dependency
+        run: sudo apt-get update && sudo apt-get install -y libcjson-dev pkg-config
+      - name: Test application logic and production adapters with host stubs
+        run: ./tools/test_qso.sh
+      - name: Verify preserved release images
+        run: |
+          python3 tools/verify_release.py 1.0
+          python3 tools/verify_release.py 2.0
+          python3 tools/verify_release.py 2.3
