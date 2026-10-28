@@ -2,6 +2,12 @@
 
 # 验证及来源
 
+## 2.3.3a 发布验证
+
+构建、应用主机测试及原生 UI 预览：PASS。作者已确认 Wi-Fi 自动恢复功能正常；本次四波纹图标及版本重编译包未由发布代理实机刷入，Device tests：NOT RUN。完整模板检查仍失败于演示专用 `on_key` 检查。
+
+完整 BIN：`19e0959545a257dea019a090ece4dac1ddf66676d887a83f8d7aa9a3bdef19e8`，1,896,672 字节，从 0x0 刷入。匹配 ELF：`389a1ff5d3b00262a59adc6597493c5a79f8f56c24d6b90cf807a33901532af7`。应用更新文件及校验值见 `firmware/2.3.3a/manifest.json`；它与完整镜像中 0x10000 的应用字节一致。编译源文件快照见 `firmware/2.3.3a/source-sha256.json`。
+
 ## 2.3.3 发布验证
 
 - Build：PASS，ESP-IDF 5.5.3 隔离构建、合并布局及匹配调试归档。

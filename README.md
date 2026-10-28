@@ -9,7 +9,7 @@ Listen to available live DMR talkgroups over Wi-Fi, follow the current caller,
 and browse recent QSOs using the Passport's physical buttons. No Android APK
 or external phone is needed to operate or configure Wi-Fi.
 
-[Download 2.3.3a](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/raw/refs/heads/main/firmware/2.3.3a/QSO-Vision.bin) · [User guide](docs/USER_GUIDE.md) ·
+[Download 2.3.3a](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3a) · [User guide](docs/USER_GUIDE.md) ·
 [Build/install](docs/BUILD.md) · [Changelog](docs/CHANGELOG.md) ·
 [Web version](https://qso.nightfall.monster) · [Creator](https://github.com/lim3soft)
 
@@ -44,8 +44,9 @@ The owner confirmed the preceding feature build; the final version-labelled rebu
 
 ## Quick start and controls
 
-1. Install the complete firmware at **0x0** and restart. Complete flashing may
-   reset settings. See [installation steps](docs/BUILD.md#install-the-downloaded-release).
+1. For a complete install, flash `QSO-Vision.bin` at **0x0**; settings may reset.
+   On existing 2.3.3/2.3.3a, use `QSO-Vision-APP-0x10000.bin` at **0x10000**
+   to retain Wi-Fi profiles, without erasing first. See [installation steps](docs/BUILD.md#install-the-downloaded-release).
 2. Short **OK → Options → Wi-Fi connection**; select your 2.4GHz network. Use
    UP/DOWN to choose password characters (hold for faster scrolling), OK to add,
    double UP to delete, and **double OK to connect**. Password limit: 25 characters.
@@ -66,11 +67,13 @@ Only **long OK** wakes an explicitly blanked screen. Brightness and timeout
 settings are under Options. See the full [English guide](docs/USER_GUIDE.md) or
 [bilingual text guide](firmware/2.3.3a/User-Guide-CN-EN.txt).
 
+App-only update: [QSO-Vision-APP-0x10000.bin](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3a/QSO-Vision-APP-0x10000.bin), flash only at **0x10000**. The full image and app-only image use different offsets.
+
 ## Releases and original firmware
 
 | Version | Download | Source status |
 | --- | --- | --- |
-| **2.3.3a — current build** | [BIN](firmware/2.3.3a/QSO-Vision.bin) · [Changes](firmware/2.3.3a/RELEASE-NOTES.md) | Current source; prepared for AI Passport community review |
+| **2.3.3a — current** | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3a) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3a/QSO-Vision.bin) | Current source and tag v2.3.3a |
 | 2.3.3 — historical | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3/QSO-Vision.bin) | Matching source retained in tag v2.3.3 |
 | 2.3 — historical | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3/QSO-Vision.bin) | Matching source retained in tag v2.3 |
 | 2.0 — historical | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.0) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.0/QSO-Vision.bin) | Original published firmware and guide; archive-only tag |

@@ -1,7 +1,7 @@
 name: Publish verified firmware
 on:
   push:
-    tags: ['v1.0', 'v2.0', 'v2.3', 'v2.3.3']
+    tags: ['v1.0', 'v2.0', 'v2.3', 'v2.3.3', 'v2.3.3a']
 permissions:
   contents: read
 concurrency:
@@ -20,7 +20,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          case "$GITHUB_REF_NAME" in v1.0|v2.0|v2.3|v2.3.3) ;; *) exit 1 ;; esac
+          case "$GITHUB_REF_NAME" in v1.0|v2.0|v2.3|v2.3.3|v2.3.3a) ;; *) exit 1 ;; esac
           version="${GITHUB_REF_NAME#v}"
           python3 tools/verify_release.py "$version"
           python3 - "$version" <<'PYNOTES'
@@ -39,7 +39,7 @@ jobs:
           set -euo pipefail
           version="${GITHUB_REF_NAME#v}"
           latest=false
-          if [[ "$version" == 2.3.3 ]]; then latest=true; fi
+          if [[ "$version" == 2.3.3a ]]; then latest=true; fi
           if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release create "$GITHUB_REF_NAME" --verify-tag \
               --title "QSO VISION $version" --notes-file release-notes.txt --latest="$latest"
@@ -48,7 +48,7 @@ jobs:
           if [[ -f "firmware/$version/User-Guide-CN-EN.txt" ]]; then
             files+=("firmware/$version/User-Guide-CN-EN.txt")
           fi
-          for optional in FLAG-ICONS-LICENSE.txt UI-Previews.zip; do
+          for optional in FLAG-ICONS-LICENSE.txt UI-Previews.zip QSO-Vision-APP-0x10000.bin; do
             if [[ -f "firmware/$version/$optional" ]]; then files+=("firmware/$version/$optional"); fi
           done
           gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber

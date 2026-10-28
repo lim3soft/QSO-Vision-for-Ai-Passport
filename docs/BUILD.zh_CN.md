@@ -41,7 +41,7 @@ BM 音频流。保留的上游 `./tools/validate.sh` 全量检查仍含模板 `o
 
 ## 安装发布固件
 
-1. 本构建从 [firmware/2.3.3a](../firmware/2.3.3a) 下载 `QSO-Vision.bin` 与 `SHA256SUMS.txt`，或使用社区安装入口。旧 GitHub 发布版继续保留。
+1. 从 [v2.3.3a 发布页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3a) 下载固件与 `SHA256SUMS.txt`，或使用社区安装入口。旧版本继续保留。
 2. 核对校验值，用 USB 数据线连接设备并关闭占用串口的监视器。
    ESP32-C3 / 8 MB 目标上的完整合并镜像必须写入 **0x0**，不能将单独应用镜像写入此地址。
 3. 用兼容的 ESP 刷写工具写入并重启。不要求全片擦除；完整刷写可能重置 Wi-Fi/亮度等设置。
@@ -50,3 +50,15 @@ BM 音频流。保留的上游 `./tools/validate.sh` 全量检查仍含模板 `o
 开发环境可对兼容分区使用 `idf.py -p COM5 flash monitor`（Windows）或
 `idf.py -p /dev/ttyACM0 flash monitor`（Linux）进行 SDK 分段刷写，须先确认实际端口，
 并不保证数据一定保留。
+
+## 已有 2.3.3/2.3.3a 的应用更新
+
+下载 `QSO-Vision-APP-0x10000.bin` 并核对同版 `SHA256SUMS.txt`。只从 **0x10000** 写入应用分区，不先擦除芯片，可保留 NVS 中的 Wi-Fi 配置及设置。已核对当前版本与已公开 2.3.3 的分区表一致。此路径仅针对该兼容布局；其他固件/未知布局请使用上述完整安装方法。
+
+关闭串口监视器后，在 ESP-IDF 5.5.3/esptool 环境执行（将 COM5 改为实际端口）：
+
+```sh
+python -m esptool --chip esp32c3 --port COM5 write_flash 0x10000 QSO-Vision-APP-0x10000.bin
+```
+
+应用文件不能从 0x0 刷入；完整 `QSO-Vision.bin` 不能从 0x10000 刷入。

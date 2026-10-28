@@ -12,7 +12,15 @@ assert data[0]==0xe9 and len(data)<=8*1024*1024
 assert len(data)==m['size']
 assert hashlib.sha256(data).hexdigest()==m['sha256']
 assert ('Build: '+version).encode() in data
-assert (p/'SHA256SUMS.txt').read_text()==m['sha256']+'  QSO-Vision.bin\n'
+expected_sums=m['sha256']+'  QSO-Vision.bin\n'
+if m.get('application_update'):
+    app=m['application_update']
+    assert app['artifact']=='QSO-Vision-APP-0x10000.bin' and app['flash_offset']=='0x10000'
+    payload=(p/app['artifact']).read_bytes()
+    assert len(payload)==app['size'] and hashlib.sha256(payload).hexdigest()==app['sha256']
+    assert data[0x10000:0x10000+len(payload)]==payload
+    expected_sums+=app['sha256']+'  '+app['artifact']+'\n'
+assert (p/'SHA256SUMS.txt').read_text()==expected_sums
 # Historical source manifests belong to their original tags, not current main.
 if version=='2.3.3a':
     descriptor=data[0x10000+24+8+16:0x10000+24+8+48].split(b'\0')[0].decode()

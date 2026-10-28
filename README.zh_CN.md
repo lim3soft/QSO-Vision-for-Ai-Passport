@@ -8,7 +8,7 @@
 通过 Wi-Fi 收听可用的实时 DMR 通话组，查看当前电台资料，并用实体按键浏览通联历史。
 本应用直接运行于 AI Passport，操作及配网无需 Android APK 或外部手机。
 
-[下载 2.3.3a](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/raw/refs/heads/main/firmware/2.3.3a/QSO-Vision.bin) · [使用指南](docs/USER_GUIDE.zh_CN.md) ·
+[下载 2.3.3a](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3a) · [使用指南](docs/USER_GUIDE.zh_CN.md) ·
 [构建/安装](docs/BUILD.zh_CN.md) · [更新日志](docs/CHANGELOG.zh_CN.md) ·
 [网页版](https://qso.nightfall.monster) · [作者主页](https://github.com/lim3soft)
 
@@ -41,7 +41,7 @@
 
 ## 快速开始与按键
 
-1. 将完整固件刷写至 **0x0** 后重启，完整刷写可能重置设置，详见[安装说明](docs/BUILD.zh_CN.md)。
+1. 完整安装使用 `QSO-Vision.bin` 从 **0x0** 刷入，可能重置设置。已有 2.3.3/2.3.3a 可使用 `QSO-Vision-APP-0x10000.bin` 从 **0x10000** 更新以保留 Wi-Fi 配置，不先擦除芯片。详见[安装说明](docs/BUILD.zh_CN.md)。
 2. 短按 **OK → Options → Wi-Fi connection**，选中可联网的 2.4GHz 网络。
    UP/DOWN 选密码字符（长按快滚），OK 添加，双按 UP 删除，**双按 OK 连接**。
    最多 25 字符；成功保存并回主页，失败时长按 OK 返回列表重试。
@@ -60,11 +60,13 @@
 手动关屏后只有**长按 OK** 唤醒。亮度及超时设置在 Options 内。
 详见[中文指南](docs/USER_GUIDE.zh_CN.md)或[中英 TXT 指南](firmware/2.3.3a/User-Guide-CN-EN.txt)。
 
+应用更新文件：[QSO-Vision-APP-0x10000.bin](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3a/QSO-Vision-APP-0x10000.bin)，仅从 **0x10000** 刷入。完整固件与应用更新文件不可混用偏移。
+
 ## 版本与原始固件
 
 | 版本 | 下载 | 源码情况 |
 | --- | --- | --- |
-| **2.3.3a — 当前构建** | [BIN](firmware/2.3.3a/QSO-Vision.bin) · [变更](firmware/2.3.3a/RELEASE-NOTES.zh_CN.md) | 当前源码；已准备 AI Passport 社区更新 |
+| **2.3.3a — 当前版** | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3a) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3a/QSO-Vision.bin) | 当前源码及 v2.3.3a 标签 |
 | 2.3.3 — 历史版 | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3/QSO-Vision.bin) | v2.3.3 标签保留匹配源码 |
 | 2.3 — 历史版 | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3/QSO-Vision.bin) | v2.3 标签保留匹配源码 |
 | 2.0 — 历史版 | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.0) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.0/QSO-Vision.bin) | 原已发布镜像与指南，仅归档标签 |
@@ -75,7 +77,7 @@
 
 2.3.3a 完整镜像 **1,896,672 字节**，SHA-256：
 `19e0959545a257dea019a090ece4dac1ddf66676d887a83f8d7aa9a3bdef19e8`。
-新增发布文档和脚本不会改变保留的作者实测固件；重新构建会因时间戳等原因改变校验值。
+新增发布文档和脚本不会改变保留的固件；重新构建会因时间戳等原因改变校验值。
 
 ## 构建、测试与限制
 

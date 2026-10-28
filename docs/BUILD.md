@@ -46,7 +46,7 @@ see the [validation record](VALIDATION.md). Do not describe that gate as passing
 
 ## Install the downloaded release
 
-1. For this build, download `QSO-Vision.bin` and `SHA256SUMS.txt` from [firmware/2.3.3a](../firmware/2.3.3a), or use the community installer. Historical GitHub releases remain available.
+1. Download firmware and `SHA256SUMS.txt` from the [v2.3.3a release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3a), or use the community installer. Historical releases remain available.
 2. Verify the digest, connect the Passport using a USB data cable, and close any
    serial monitor using the port. The full merged image must be written at **0x0**
    on the ESP32-C3 / 8 MB target. Do not write an application-only image at 0x0.
@@ -59,3 +59,15 @@ For a development checkout with a compatible existing partition layout,
 `idf.py -p COM5 flash monitor` (Windows) or
 `idf.py -p /dev/ttyACM0 flash monitor` (Linux) uses the SDK's segmented-flash flow.
 Confirm the actual port first. This does not guarantee preservation of data.
+
+## App-only update from existing 2.3.3/2.3.3a
+
+Download `QSO-Vision-APP-0x10000.bin` and verify it against the same release's `SHA256SUMS.txt`. Write only the application partition at **0x10000**, without erasing first, to retain Wi-Fi profiles/settings in NVS. This release's partition table was checked against published 2.3.3 and matches. This update path is for that compatible layout; use the full installation above for other or unknown firmware layouts.
+
+Close the serial monitor, then use ESP-IDF 5.5.3/esptool (replace COM5 with your actual port):
+
+```sh
+python -m esptool --chip esp32c3 --port COM5 write_flash 0x10000 QSO-Vision-APP-0x10000.bin
+```
+
+Never flash the app-only image at 0x0, or the full `QSO-Vision.bin` at 0x10000.

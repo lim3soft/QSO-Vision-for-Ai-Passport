@@ -2,6 +2,12 @@
 
 # Validation and provenance
 
+## 2.3.3a release validation
+
+Build, application host tests and native UI preview: PASS. The owner confirmed saved-network Wi-Fi recovery; the final four-wave icon/version rebuild has not been independently flashed by the publishing agent (Device tests: NOT RUN). The full template gate retains its demo-only `on_key` failure.
+
+Full BIN: `19e0959545a257dea019a090ece4dac1ddf66676d887a83f8d7aa9a3bdef19e8`, 1,896,672 bytes, flash at 0x0. Matching ELF: `389a1ff5d3b00262a59adc6597493c5a79f8f56c24d6b90cf807a33901532af7`. App-only metadata is in `firmware/2.3.3a/manifest.json`; its bytes match the full image's application at 0x10000. Compiled source snapshot: `firmware/2.3.3a/source-sha256.json`.
+
 ## 2.3.3 release validation
 
 - Build: PASS, ESP-IDF 5.5.3 isolated build, merged layout and matching debug archive.
