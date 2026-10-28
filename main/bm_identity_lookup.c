@@ -9,7 +9,7 @@ bool bm_identity_lookup(uint32_t id,bm_identity_t *out)
     snprintf(url,sizeof(url),"https://radioid.net/api/dmr/user/?id=%lu",(unsigned long)id);
     esp_http_client_config_t config={.url=url,.timeout_ms=3000,.buffer_size=512,
         .buffer_size_tx=512,.crt_bundle_attach=esp_crt_bundle_attach,
-        .user_agent="QSO-VISION/2.3.3",.disable_auto_redirect=false};
+        .user_agent="QSO-VISION/2.3.3a",.disable_auto_redirect=false};
     esp_http_client_handle_t client=esp_http_client_init(&config);
     if(!client)return false;
     bool ok=false;

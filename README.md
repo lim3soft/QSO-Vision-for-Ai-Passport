@@ -3,28 +3,28 @@
 # QSO VISION for AI Passport
 
 **Portable, receive-only BrandMeister talkgroup monitoring.**
-Developed by **limesoft (9W3SPY)**. Current app build: **2.3.3**.
+Developed by **limesoft (9W3SPY)**. Current app build: **2.3.3a**.
 
 Listen to available live DMR talkgroups over Wi-Fi, follow the current caller,
 and browse recent QSOs using the Passport's physical buttons. No Android APK
 or external phone is needed to operate or configure Wi-Fi.
 
-[Download 2.3.3](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3) · [User guide](docs/USER_GUIDE.md) ·
+[Download 2.3.3a](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/raw/refs/heads/main/firmware/2.3.3a/QSO-Vision.bin) · [User guide](docs/USER_GUIDE.md) ·
 [Build/install](docs/BUILD.md) · [Changelog](docs/CHANGELOG.md) ·
 [Web version](https://qso.nightfall.monster) · [Creator](https://github.com/lim3soft)
 
 ## Screenshots
 
-Native 2.3.3 UI renders with **sample data**, not device photographs or live QSO records.
+Native 2.3.3a UI renders with **sample data**, not device photographs or live QSO records.
 The owner confirmed the preceding feature build; the final version-labelled rebuild has not been independently flashed by the publishing agent.
 
 | On air, flags and reported quality | Idle with five visible history entries |
 | --- | --- |
-| ![On-air preview](assets/images/qso-vision/2.3.3/cover.png) | ![History preview](assets/images/qso-vision/2.3.3/gallery-history.png) |
+| ![On-air preview](assets/images/qso-vision/2.3.3a/cover.png) | ![History preview](assets/images/qso-vision/2.3.3a/gallery-history.png) |
 | Presets and custom talkgroups | Saved brightness |
-| ![Talkgroups](assets/images/qso-vision/2.3.3/gallery-talkgroups.png) | ![Brightness](assets/images/qso-vision/2.3.3/gallery-brightness.png) |
+| ![Talkgroups](assets/images/qso-vision/2.3.3a/gallery-talkgroups.png) | ![Brightness](assets/images/qso-vision/2.3.3a/gallery-brightness.png) |
 
-[Screen timeout preview](assets/images/qso-vision/2.3.3/gallery-timeout.png)
+[Screen timeout preview](assets/images/qso-vision/2.3.3a/gallery-timeout.png)
 
 ## Features
 
@@ -35,7 +35,7 @@ The owner confirmed the preceding feature build; the final version-labelled rebu
 - Current clock: **hh:mm:ss DAY dd/mm/yy**, default Malaysia UTC+08:00, synced
   over the network. Corner EQ bars animate activity and settle to zero when idle;
   they are a visual activity animation, not a measured frequency spectrum.
-- On-device Wi-Fi scan/password keyboard, saved profiles, retry/reconnection.
+- On-device Wi-Fi scan/password keyboard and saved profiles; automatically tries other available saved networks if the last-used one cannot connect.
 - Saved **1–100%** awake brightness. Timeouts: **1 / 5 / 10 minutes, Smart, Never**.
   Default Smart dims to **1% after five quiet seconds**; waking restores the saved level.
 - Offline picture flags before callsigns (256 designs), uppercase countries and reported BER/loss in history; missing values show `--`.
@@ -64,13 +64,14 @@ The owner confirmed the preceding feature build; the final version-labelled rebu
 
 Only **long OK** wakes an explicitly blanked screen. Brightness and timeout
 settings are under Options. See the full [English guide](docs/USER_GUIDE.md) or
-[bilingual text guide](firmware/2.3.3/User-Guide-CN-EN.txt).
+[bilingual text guide](firmware/2.3.3a/User-Guide-CN-EN.txt).
 
 ## Releases and original firmware
 
 | Version | Download | Source status |
 | --- | --- | --- |
-| **2.3.3 — current** | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3/QSO-Vision.bin) | Current source in this repository and tag v2.3.3 |
+| **2.3.3a — current build** | [BIN](firmware/2.3.3a/QSO-Vision.bin) · [Changes](firmware/2.3.3a/RELEASE-NOTES.md) | Current source; prepared for AI Passport community review |
+| 2.3.3 — historical | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3/QSO-Vision.bin) | Matching source retained in tag v2.3.3 |
 | 2.3 — historical | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3/QSO-Vision.bin) | Matching source retained in tag v2.3 |
 | 2.0 — historical | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.0) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.0/QSO-Vision.bin) | Original published firmware and guide; archive-only tag |
 | 1.0 — historical | [Release](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v1.0) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v1.0/QSO-Vision.bin) | Last preserved 1.0-labelled image; archive-only tag |
@@ -78,10 +79,10 @@ settings are under Options. See the full [English guide](docs/USER_GUIDE.md) or
 Each release includes a manifest and SHA-256 checksums. The `.bin` files are
 also retained under `firmware/<version>/` as explicitly requested. Historical
 1.0/2.0 tags **do not pretend to be original source snapshots**: matching source
-was not retained. Use 2.3.3 for current operation and the full buildable source.
+was not retained. Use 2.3.3a for current operation and the full buildable source.
 
-The 2.3.3 merged image is **1,894,144 bytes**, SHA-256:
-`8f9a2198fd5d764945cd96931fb7b1e81d4c7ee986e1b6e99f44079e9005a483`.
+The 2.3.3a merged image is **1,896,672 bytes**, SHA-256:
+`19e0959545a257dea019a090ece4dac1ddf66676d887a83f8d7aa9a3bdef19e8`.
 Build scripts/metadata are separate from the preserved release firmware;
 a rebuild can produce a different digest due to timestamps/debug paths.
 

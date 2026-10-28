@@ -3,27 +3,27 @@
 # QSO VISION for AI Passport
 
 **随身、仅接收的 BrandMeister 通话组监听器。**
-开发者：**limesoft (9W3SPY)**，当前应用构建：**2.3.3**。
+开发者：**limesoft (9W3SPY)**，当前应用构建：**2.3.3a**。
 
 通过 Wi-Fi 收听可用的实时 DMR 通话组，查看当前电台资料，并用实体按键浏览通联历史。
 本应用直接运行于 AI Passport，操作及配网无需 Android APK 或外部手机。
 
-[下载 2.3.3](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3) · [使用指南](docs/USER_GUIDE.zh_CN.md) ·
+[下载 2.3.3a](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/raw/refs/heads/main/firmware/2.3.3a/QSO-Vision.bin) · [使用指南](docs/USER_GUIDE.zh_CN.md) ·
 [构建/安装](docs/BUILD.zh_CN.md) · [更新日志](docs/CHANGELOG.zh_CN.md) ·
 [网页版](https://qso.nightfall.monster) · [作者主页](https://github.com/lim3soft)
 
 ## 界面截图
 
-以下为使用**示例资料**的 2.3.3 原生界面渲染，并非设备照片或实时通联记录。
+以下为使用**示例资料**的 2.3.3a 原生界面渲染，并非设备照片或实时通联记录。
 作者确认此前功能测试版正常；最终版本号重编译包尚未由发布代理独立实机刷入。
 
 | 当前通话、旗帜及质量资料 | 空闲与五条可见历史 |
 | --- | --- |
-| ![当前通话预览](assets/images/qso-vision/2.3.3/cover.png) | ![历史预览](assets/images/qso-vision/2.3.3/gallery-history.png) |
+| ![当前通话预览](assets/images/qso-vision/2.3.3a/cover.png) | ![历史预览](assets/images/qso-vision/2.3.3a/gallery-history.png) |
 | 预设与自定义组号 | 保存的屏幕亮度 |
-| ![通话组](assets/images/qso-vision/2.3.3/gallery-talkgroups.png) | ![亮度](assets/images/qso-vision/2.3.3/gallery-brightness.png) |
+| ![通话组](assets/images/qso-vision/2.3.3a/gallery-talkgroups.png) | ![亮度](assets/images/qso-vision/2.3.3a/gallery-brightness.png) |
 
-[屏幕超时预览](assets/images/qso-vision/2.3.3/gallery-timeout.png)
+[屏幕超时预览](assets/images/qso-vision/2.3.3a/gallery-timeout.png)
 
 ## 功能
 
@@ -32,7 +32,7 @@
 - 显示可用的呼号、姓名、国家及通话时长，最多保存 **15 条历史，每屏五条**，逐条滚动。
 - 当前时钟格式 **hh:mm:ss DAY dd/mm/yy**，网络对时，默认马来西亚 UTC+08:00。
   右下角 EQ 随 QSO 活动跳动，空闲时归零；它是活动动画，不是实测频谱。
-- 设备端 Wi-Fi 扫描/密码键盘、配置保存及失败重连。
+- 设备端 Wi-Fi 扫描/密码键盘、配置保存及失败重连；最近网络不可用时自动尝试其他可用的已保存网络。
 - 保存的唤醒亮度 **1–100%**；超时选项为 **1 / 5 / 10 分钟、Smart、Never**。
   默认 Smart 空闲五秒后调暗至 **1%**，恢复时使用保存亮度。
 - 呼号前有离线国家旗帜（256 套），国家名大写；历史显示 BER/丢包率，缺失资料显示 `--`。
@@ -58,22 +58,23 @@
 | 菜单内 UP/DOWN、OK、长按 OK | 选择、确认、返回 |
 
 手动关屏后只有**长按 OK** 唤醒。亮度及超时设置在 Options 内。
-详见[中文指南](docs/USER_GUIDE.zh_CN.md)或[中英 TXT 指南](firmware/2.3.3/User-Guide-CN-EN.txt)。
+详见[中文指南](docs/USER_GUIDE.zh_CN.md)或[中英 TXT 指南](firmware/2.3.3a/User-Guide-CN-EN.txt)。
 
 ## 版本与原始固件
 
 | 版本 | 下载 | 源码情况 |
 | --- | --- | --- |
-| **2.3.3 — 当前版** | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3/QSO-Vision.bin) | 此仓库及 v2.3.3 标签含当前源码 |
+| **2.3.3a — 当前构建** | [BIN](firmware/2.3.3a/QSO-Vision.bin) · [变更](firmware/2.3.3a/RELEASE-NOTES.zh_CN.md) | 当前源码；已准备 AI Passport 社区更新 |
+| 2.3.3 — 历史版 | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3.3/QSO-Vision.bin) | v2.3.3 标签保留匹配源码 |
 | 2.3 — 历史版 | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.3) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.3/QSO-Vision.bin) | v2.3 标签保留匹配源码 |
 | 2.0 — 历史版 | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v2.0) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v2.0/QSO-Vision.bin) | 原已发布镜像与指南，仅归档标签 |
 | 1.0 — 历史版 | [版本页](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/tag/v1.0) · [BIN](https://github.com/lim3soft/QSO-Vision-for-Ai-Passport/releases/download/v1.0/QSO-Vision.bin) | 最后保留的 1.0 标记镜像，仅归档标签 |
 
 每个版本附清单及 SHA-256 校验值，并按作者要求在 `firmware/<版本>/` 保存 `.bin`。
-未保留匹配的旧源码，因此 1.0/2.0 标签**不冒充原始源码快照**；当前使用及完整可构建源码请选 2.3.3。
+未保留匹配的旧源码，因此 1.0/2.0 标签**不冒充原始源码快照**；当前使用及完整可构建源码请选 2.3.3a。
 
-2.3.3 完整镜像 **1,894,144 字节**，SHA-256：
-`8f9a2198fd5d764945cd96931fb7b1e81d4c7ee986e1b6e99f44079e9005a483`。
+2.3.3a 完整镜像 **1,896,672 字节**，SHA-256：
+`19e0959545a257dea019a090ece4dac1ddf66676d887a83f8d7aa9a3bdef19e8`。
 新增发布文档和脚本不会改变保留的作者实测固件；重新构建会因时间戳等原因改变校验值。
 
 ## 构建、测试与限制

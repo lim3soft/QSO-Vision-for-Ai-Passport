@@ -58,6 +58,8 @@ int esp_wifi_scan_start(const void *config,bool block);
 int esp_wifi_scan_stop(void);
 int esp_wifi_scan_get_ap_num(uint16_t *count);
 int esp_wifi_scan_get_ap_records(uint16_t *count,wifi_ap_record_t *records);
+int esp_wifi_scan_get_ap_record(wifi_ap_record_t *record);
+int esp_wifi_clear_ap_list(void);
 int esp_wifi_set_config(int interface,const wifi_config_t *config);
 int esp_wifi_sta_get_ap_info(wifi_ap_record_t *out);
 int nvs_open(const char *name,int mode,nvs_handle_t *handle);

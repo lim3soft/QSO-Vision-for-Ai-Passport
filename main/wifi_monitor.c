@@ -43,6 +43,19 @@ static char s_pending_ssid[33], s_pending_password[65];
 static bool s_save_pending, s_commit_pending;
 static bool s_scan_requested, s_scan_active;
 static int64_t s_scan_deadline;
+/* A scan keeps only eight candidate signal levels, never a second AP list.
+ * Driver records are consumed one at a time by the service worker. */
+#define WIFI_AUTO_SCAN_INTERVAL_US 30000000LL
+static bool s_setup_active, s_scan_automatic, s_auto_scan_ready;
+static bool s_auto_advance, s_auto_have_scan, s_remember_pending;
+static uint8_t s_auto_seen, s_auto_tried;
+static int8_t s_auto_rssi[WIFI_PROFILE_MAX];
+static int64_t s_auto_scan_at;
+
+static void automatic_attempt_failed(void)
+{
+    if(!s_setup_active)s_auto_advance=true;
+}
 
 static void set_state(bm_wifi_state_t state)
 {
@@ -123,11 +136,21 @@ static esp_err_t migrate_legacy_profile(void)
     if (read_credential(WIFI_NVS_SSID, ssid, sizeof(ssid)) == false ||
         read_credential(WIFI_NVS_PASSWORD, password, sizeof(password)) == false)
         return ESP_OK;
+    /* Migration is idempotent: old compatibility keys must not overwrite a
+     * newer profile in slot zero or reset the last successful automatic SSID. */
+    if(find_profile(ssid,NULL,0)>=0)return ESP_OK;
+    size_t slot;
+    char existing_ssid[33],existing_password[65],last_ssid[33];
+    for(slot=0;slot<WIFI_PROFILE_MAX;++slot)
+        if(!read_profile(slot,existing_ssid,sizeof(existing_ssid),
+                         existing_password,sizeof(existing_password)))break;
+    if(slot==WIFI_PROFILE_MAX)return ESP_ERR_NO_MEM;
+    bool have_last=read_value(WIFI_NVS_LAST_SSID,last_ssid,sizeof(last_ssid),true);
     nvs_handle_t handle;
     esp_err_t err = nvs_open(WIFI_NVS_NAMESPACE, NVS_READWRITE, &handle);
     if (err == ESP_OK) {
-        err = write_profile(handle, 0, ssid, password);
-        if (err == ESP_OK) err = nvs_set_str(handle, WIFI_NVS_LAST_SSID, ssid);
+        err = write_profile(handle, slot, ssid, password);
+        if (err == ESP_OK && !have_last) err = nvs_set_str(handle, WIFI_NVS_LAST_SSID, ssid);
         if (err == ESP_OK) err = nvs_commit(handle);
         nvs_close(handle);
     }
@@ -142,6 +165,10 @@ static void wifi_event(void *arg, esp_event_base_t base, int32_t id, void *data)
     if (id == WIFI_EVENT_SCAN_DONE) {
         if(!s_scan_active)return; /* Ignore a cancelled scan's late event. */
         s_scan_active=false;s_scan_deadline=0;
+        if(s_scan_automatic) {
+            s_auto_scan_ready=true;
+            return; /* AP records belong to the recovery worker, not the UI. */
+        }
         s_scan_ready = true;
         /* Scanning must not make an existing STA connection look lost. */
         set_state(s_link_connected ? BM_WIFI_CONNECTED : BM_WIFI_SCAN_READY);
@@ -169,7 +196,10 @@ static void wifi_event(void *arg, esp_event_base_t base, int32_t id, void *data)
         bool active=s_retry.active;
         bool failed=wifi_retry_disconnected(&s_retry,esp_timer_get_time(),auth);
         taskEXIT_CRITICAL(&s_retry_mux);
-        if(failed)connection_failed(auth?"Authentication failed - edit password":"Connection failed - select network");
+        if(failed) {
+            connection_failed(auth?"Authentication failed - edit password":"Connection failed - select network");
+            automatic_attempt_failed();
+        }
         else if(active)set_state(BM_WIFI_CONNECTING);
     }
 }
@@ -190,6 +220,10 @@ static void ip_event(void *arg, esp_event_base_t base, int32_t id, void *data)
             set_state(BM_WIFI_CONNECTED);
             s_last_error[0]=s_failed_ssid[0]=0;
             s_commit_pending=s_save_pending;
+            s_remember_pending=!s_save_pending;
+            if(!s_save_pending)memset(s_pending_password,0,sizeof(s_pending_password));
+            s_auto_advance=s_auto_have_scan=false;
+            s_auto_seen=s_auto_tried=0;s_auto_scan_at=0;
         }
         taskEXIT_CRITICAL(&s_retry_mux);
         if(!active)return;
@@ -286,8 +320,10 @@ esp_err_t bm_wifi_start(void)
 esp_err_t bm_wifi_scan(void)
 {
     if (!s_started) return ESP_ERR_INVALID_STATE;
+    bm_wifi_set_setup_active(true);
     bool was_connected = s_link_connected;
     s_scan_ready = false;
+    s_scan_automatic=false;
     s_scan_requested=true;s_scan_active=false;
     s_scan_deadline=esp_timer_get_time()+15000000;
     if(!was_connected) {
@@ -331,7 +367,7 @@ static esp_err_t save_confirmed_profile(const char *ssid, const char *password)
     return err;
 }
 
-esp_err_t bm_wifi_set_credentials(const char *ssid, const char *password)
+static esp_err_t connect_credentials(const char *ssid, const char *password, bool manual)
 {
     if(!ssid || !password || !ssid[0] || strlen(ssid)>32 || strlen(password)>64)
         return ESP_ERR_INVALID_ARG;
@@ -340,6 +376,7 @@ esp_err_t bm_wifi_set_credentials(const char *ssid, const char *password)
         err=bm_wifi_start();
         if(err!=ESP_OK)return err;
     }
+    if(!manual && (s_setup_active || s_link_connected))return ESP_ERR_INVALID_STATE;
     wifi_config_t wifi = {0};
     memcpy(wifi.sta.ssid, ssid, strlen(ssid));
     strncpy((char *)wifi.sta.password, password, sizeof(wifi.sta.password) - 1);
@@ -356,14 +393,16 @@ esp_err_t bm_wifi_set_credentials(const char *ssid, const char *password)
     (void)esp_wifi_scan_stop();
     (void)esp_wifi_disconnect();
     vTaskDelay(pdMS_TO_TICKS(100));
+    /* A button may have opened setup while the automatic handoff yielded. */
+    if(!manual && s_setup_active) {s_reconfiguring=false;return ESP_ERR_INVALID_STATE;}
     err = esp_wifi_set_config(WIFI_IF_STA, &wifi);
     if (err == ESP_OK) {
         s_link_connected = false;
         taskENTER_CRITICAL(&s_retry_mux);
         snprintf(s_pending_ssid,sizeof(s_pending_ssid),"%s",ssid);
         snprintf(s_pending_password,sizeof(s_pending_password),"%s",password);
-        s_save_pending=true;s_commit_pending=false;s_last_error[0]=0;
-        wifi_retry_begin(&s_retry,esp_timer_get_time(),true);
+        s_save_pending=manual;s_commit_pending=false;s_last_error[0]=0;
+        wifi_retry_begin(&s_retry,esp_timer_get_time(),manual);
         taskEXIT_CRITICAL(&s_retry_mux);
         set_state(BM_WIFI_CONNECTING);
         err = esp_wifi_connect();
@@ -372,10 +411,109 @@ esp_err_t bm_wifi_set_credentials(const char *ssid, const char *password)
     if (err != ESP_OK) {
         taskENTER_CRITICAL(&s_retry_mux);wifi_retry_pause(&s_retry);taskEXIT_CRITICAL(&s_retry_mux);
         connection_failed("Connection could not start - retry");
+        if(!manual)automatic_attempt_failed();
         ESP_LOGE(TAG, "Wi-Fi connect start failed for %.32s: %s",
                  ssid, esp_err_to_name(err));
     }
     return err;
+}
+
+esp_err_t bm_wifi_set_credentials(const char *ssid, const char *password)
+{
+    if(!ssid || !password || !ssid[0] || strlen(ssid)>32 || strlen(password)>64)
+        return ESP_ERR_INVALID_ARG;
+    bm_wifi_set_setup_active(true);
+    return connect_credentials(ssid,password,true);
+}
+
+void bm_wifi_set_setup_active(bool active)
+{
+    if(s_setup_active==active)return;
+    s_setup_active=active;
+    s_auto_advance=s_auto_have_scan=false;
+    s_auto_seen=s_auto_tried=0;s_auto_scan_at=0;
+    if(active && s_scan_automatic) {
+        s_scan_requested=s_scan_active=s_auto_scan_ready=false;
+        s_scan_automatic=false;s_scan_deadline=0;
+        (void)esp_wifi_scan_stop();
+        (void)esp_wifi_clear_ap_list();
+    }
+    taskENTER_CRITICAL(&s_retry_mux);
+    bool attempting=s_retry.active;
+    if(active && !s_link_connected && !s_retry.manual) {
+        wifi_retry_pause(&s_retry);attempting=false;
+    }
+    taskEXIT_CRITICAL(&s_retry_mux);
+    if(!active && !s_link_connected && !attempting)
+        s_auto_scan_at=esp_timer_get_time();
+}
+
+static void read_automatic_scan(void)
+{
+    char ssids[WIFI_PROFILE_MAX][33], password[65];
+    for(size_t i=0;i<WIFI_PROFILE_MAX;++i) {
+        ssids[i][0]=0;
+        (void)read_profile(i,ssids[i],sizeof(ssids[i]),password,sizeof(password));
+    }
+    memset(password,0,sizeof(password));
+    s_auto_seen=0;
+    wifi_ap_record_t ap;
+    /* No 16/32-AP truncation: even a weak saved SSID at the end is considered. */
+    while(esp_wifi_scan_get_ap_record(&ap)==ESP_OK) {
+        for(size_t i=0;i<WIFI_PROFILE_MAX;++i) {
+            if(!ssids[i][0] || strncmp((const char*)ap.ssid,ssids[i],33))continue;
+            if(!(s_auto_seen&(1U<<i)) || ap.rssi>s_auto_rssi[i])s_auto_rssi[i]=ap.rssi;
+            s_auto_seen|=(uint8_t)(1U<<i);
+        }
+    }
+    (void)esp_wifi_clear_ap_list();
+    s_auto_have_scan=true;s_auto_scan_ready=false;s_scan_automatic=false;
+}
+
+static void automatic_recovery_service(int64_t now)
+{
+    if(s_setup_active || s_link_connected || s_reconfiguring)return;
+    if(s_auto_scan_ready) {
+        read_automatic_scan();
+        s_auto_advance=true;
+    }
+    if(s_auto_advance) {
+        s_auto_advance=false;
+        taskENTER_CRITICAL(&s_retry_mux);wifi_retry_pause(&s_retry);taskEXIT_CRITICAL(&s_retry_mux);
+        if(!s_auto_have_scan) {
+            int failed=find_profile(s_connected_ssid,NULL,0);
+            if(failed>=0)s_auto_tried|=(uint8_t)(1U<<failed);
+            s_auto_scan_at=now;
+        } else {
+            char last[33]={0}, ssid[33], password[65];
+            (void)read_value(WIFI_NVS_LAST_SSID,last,sizeof(last),true);
+            int best=-1;
+            for(size_t i=0;i<WIFI_PROFILE_MAX;++i) {
+                if(!(s_auto_seen&(1U<<i)) || (s_auto_tried&(1U<<i)))continue;
+                if(!read_profile(i,ssid,sizeof(ssid),password,sizeof(password)))continue;
+                if(!strcmp(ssid,last)){best=(int)i;break;}
+                if(best<0 || s_auto_rssi[i]>s_auto_rssi[best])best=(int)i;
+            }
+            if(best>=0 && read_profile((size_t)best,ssid,sizeof(ssid),password,sizeof(password))) {
+                s_auto_tried|=(uint8_t)(1U<<best);
+                ESP_LOGI(TAG,"Trying available saved Wi-Fi %.32s",ssid);
+                (void)connect_credentials(ssid,password,false);
+            } else {
+                s_auto_have_scan=false;s_auto_seen=s_auto_tried=0;
+                s_auto_scan_at=now+WIFI_AUTO_SCAN_INTERVAL_US;
+                set_state(BM_WIFI_SCAN_READY);
+            }
+            memset(password,0,sizeof(password));
+        }
+    }
+    if(!s_auto_scan_at || now<s_auto_scan_at || s_scan_active || s_scan_requested)return;
+    s_auto_scan_at=0;
+    if(!bm_wifi_saved_profile_count())return;
+    taskENTER_CRITICAL(&s_retry_mux);wifi_retry_pause(&s_retry);taskEXIT_CRITICAL(&s_retry_mux);
+    s_scan_automatic=true;s_auto_scan_ready=false;
+    s_scan_ready=false;s_scan_requested=true;s_scan_deadline=now+15000000;
+    (void)esp_wifi_disconnect();
+    set_state(BM_WIFI_SCANNING);
 }
 
 void bm_wifi_service(void)
@@ -385,10 +523,16 @@ void bm_wifi_service(void)
     if(s_scan_deadline && now>=s_scan_deadline) {
         s_scan_requested=s_scan_active=false;s_scan_deadline=0;
         (void)esp_wifi_scan_stop();
+        (void)esp_wifi_clear_ap_list();
+        if(s_scan_automatic) {
+            s_scan_automatic=s_auto_scan_ready=false;
+            s_auto_scan_at=now+WIFI_AUTO_SCAN_INTERVAL_US;
+        }
         s_scan_ready=true;
         snprintf(s_last_error,sizeof(s_last_error),"Scan timed out - OK to retry");
         set_state(s_link_connected?BM_WIFI_CONNECTED:BM_WIFI_SCAN_READY);
     }
+    automatic_recovery_service(now);
     if(s_scan_requested) {
         s_scan_active=true;
         esp_err_t err=esp_wifi_scan_start(NULL,false);
@@ -402,6 +546,7 @@ void bm_wifi_service(void)
     if(action==WIFI_RETRY_TIMEOUT) {
         connection_failed("Connection timed out - select network");
         (void)esp_wifi_disconnect();
+        automatic_attempt_failed();
     } else if(action==WIFI_RETRY_CONNECT) {
         set_state(BM_WIFI_CONNECTING);
         esp_err_t err=esp_wifi_connect();
@@ -409,7 +554,10 @@ void bm_wifi_service(void)
             taskENTER_CRITICAL(&s_retry_mux);
             bool failed=wifi_retry_disconnected(&s_retry,now,false);
             taskEXIT_CRITICAL(&s_retry_mux);
-            if(failed)connection_failed("Connection could not start - retry");
+            if(failed) {
+                connection_failed("Connection could not start - retry");
+                automatic_attempt_failed();
+            }
         }
     }
     char ssid[33], password[65];
@@ -427,6 +575,21 @@ void bm_wifi_service(void)
         memset(password,0,sizeof(password));
         if(err!=ESP_OK)ESP_LOGE(TAG,"Connected profile save failed: %s",esp_err_to_name(err));
     }
+    if(s_remember_pending && s_link_connected) {
+        s_remember_pending=false;
+        char last[33]={0};
+        (void)read_value(WIFI_NVS_LAST_SSID,last,sizeof(last),true);
+        if(strcmp(last,s_connected_ssid)) {
+            nvs_handle_t handle;
+            esp_err_t err=nvs_open(WIFI_NVS_NAMESPACE,NVS_READWRITE,&handle);
+            if(err==ESP_OK) {
+                err=nvs_set_str(handle,WIFI_NVS_LAST_SSID,s_connected_ssid);
+                if(err==ESP_OK)err=nvs_commit(handle);
+                nvs_close(handle);
+            }
+            if(err!=ESP_OK)ESP_LOGW(TAG,"Last Wi-Fi profile save failed: %s",esp_err_to_name(err));
+        }
+    }
 }
 
 const char *bm_wifi_last_error(void) { return s_last_error; }
@@ -436,6 +599,10 @@ esp_err_t bm_wifi_stop(void)
 {
     taskENTER_CRITICAL(&s_retry_mux);wifi_retry_pause(&s_retry);taskEXIT_CRITICAL(&s_retry_mux);
     s_scan_requested=s_scan_active=false;s_scan_deadline=0;
+    s_setup_active=s_scan_automatic=s_auto_scan_ready=false;
+    s_auto_advance=s_auto_have_scan=s_remember_pending=false;
+    s_auto_seen=s_auto_tried=0;s_auto_scan_at=0;
+    s_link_connected=false;s_save_pending=s_commit_pending=false;
     if (s_started) {
         (void)esp_wifi_disconnect();
         (void)esp_wifi_stop();

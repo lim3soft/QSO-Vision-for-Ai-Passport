@@ -131,6 +131,7 @@ static void status_task(void *arg) {
     (void)arg;
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(500));
+        bm_wifi_set_setup_active(s_wifi_screen);
         bm_wifi_service();
         bm_wifi_state_t state = bm_wifi_state();
         bm_audio_state_t audio_state = bm_audio_state();

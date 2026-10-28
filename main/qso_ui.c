@@ -70,10 +70,12 @@ static void wifi_draw(lv_event_t *event)
     lv_area_t a; lv_obj_get_coords(ui->wifi_icon, &a);
     lv_layer_t *layer = lv_event_get_layer(event);
     uint32_t color = ui->wifi_connected ? GREEN : RED;
-    arc(layer,a.x1+7,a.y1+12,9,225,315,color);
-    arc(layer,a.x1+7,a.y1+12,5,225,315,color);
-    stroke(layer,a.x1+7,a.y1+12,a.x1+7,a.y1+12,color,2);
-    if (!ui->wifi_connected) stroke(layer,a.x1+2,a.y1+2,a.x1+13,a.y1+13,RED,1);
+    /* Four separated wave bands plus the connection dot. The wider drawing
+     * fits between the wordmark and speaker without clipping the outer band. */
+    for(int radius=14;radius>=5;radius-=3)
+        arc(layer,a.x1+10,a.y1+18,radius,225,315,color);
+    stroke(layer,a.x1+10,a.y1+18,a.x1+10,a.y1+18,color,2);
+    if (!ui->wifi_connected) stroke(layer,a.x1+2,a.y1+4,a.x1+19,a.y1+19,RED,1);
 }
 
 static void speaker_draw(lv_event_t *event)
@@ -347,7 +349,7 @@ bool qso_ui_create(qso_ui_t *ui)
     lv_obj_t *rule=plain(ui->screen,16,37,208,1);
     if (!rule) return false;
     lv_obj_set_style_bg_color(rule,lv_color_hex(RULE),0); lv_obj_set_style_bg_opa(rule,LV_OPA_COVER,0);
-    ui->wifi_icon=plain(ui->screen,139,15,16,16);
+    ui->wifi_icon=plain(ui->screen,137,12,22,21);
     ui->audio_icon=plain(ui->screen,162,15,16,16);
     ui->battery_icon=plain(ui->screen,188,15,36,15);
     if (!ui->wifi_icon||!ui->audio_icon||!ui->battery_icon) return false;
@@ -516,7 +518,7 @@ void qso_ui_about(qso_ui_t *ui, const bm_wifi_info_t *wifi, int battery)
     char text[1000];
     snprintf(text,sizeof(text),
         "WI-FI / DEVICE\nWi-Fi: %s\nSSID: %s\nSignal: %s\nIP: %s\nSubnet: %s\nGateway: %s\nDNS 1: %s\nDNS 2: %s\nDNS 3: %s\nBattery: %s\n\n"
-        "ABOUT / LICENSES\nQSO Vision for AI Passport\nBuild: 2.3.3 / ESP-IDF 5.5.3\n\n"
+        "ABOUT / LICENSES\nQSO Vision for AI Passport\nBuild: 2.3.3a / ESP-IDF 5.5.3\n\n"
         "Independent, receive-only app.\nBrandMeister/Hoseline APIs, data and trademarks belong to their respective owners. "
         "Access is subject to their terms. No affiliation or endorsement. "
         "Service availability is not guaranteed. Use where permitted.\n\n"

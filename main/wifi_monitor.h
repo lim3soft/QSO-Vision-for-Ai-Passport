@@ -24,6 +24,9 @@ const char *bm_wifi_state_text(void);
 const char *bm_wifi_connected_ssid(void);
 void bm_wifi_get_info(bm_wifi_info_t *out);
 void bm_wifi_service(void);
+/* Suspend saved-network selection while the Wi-Fi list/editor owns the radio.
+ * Leaving setup resumes automatic recovery if there is no active connection. */
+void bm_wifi_set_setup_active(bool active);
 const char *bm_wifi_last_error(void);
 const char *bm_wifi_failed_ssid(void);
 bool bm_wifi_has_credentials(void);

@@ -1,6 +1,6 @@
 [简体中文](USER_GUIDE.zh_CN.md) · English
 
-# QSO VISION 2.3.3 — user guide
+# QSO VISION 2.3.3a — user guide
 
 Developer: limesoft (9W3SPY). Device UI: English.
 
@@ -37,7 +37,7 @@ Inside menus: UP / DOWN moves the selection, short OK confirms, and long OK goes
 ## 4. SAVED NETWORKS
 
 - Select an available saved network and press OK to connect using its saved password.
-- At startup, the app attempts to reconnect to the last saved network. Saved networks outside scan range show SAVED/OFFLINE.
+- At startup, the app first tries the last successful network, then other visible saved profiles if it cannot connect. It scans again later if none works and keeps a healthy connection. Automatic selection pauses during manual Wi-Fi setup and resumes on exit. Saved networks outside scan range show SAVED/OFFLINE.
 - Edit a password: highlight the saved network in the list, double DOWN, edit the password, then double OK to connect.
 - Delete a profile: highlight the saved network in the list and double UP. This deletes the network profile. Double UP deletes a single character only while you are in the password editor.
 
